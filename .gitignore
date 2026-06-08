@@ -4,3 +4,7 @@ out
 .DS_Store
 .eslintcache
 *.log*
+
+# Local SQLite database (keep the db/ folder, ignore the data files)
+db/*.sqlite
+db/*.sqlite-*

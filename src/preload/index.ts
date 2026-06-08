@@ -12,6 +12,13 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', api)
 
+    contextBridge.exposeInMainWorld('dbAPI', {
+      status: (): Promise<{ driver: string; connected: boolean; target: string }> =>
+        ipcRenderer.invoke('db:status'),
+      query: <T = unknown>(sql: string, params?: unknown[]): Promise<T[]> =>
+        ipcRenderer.invoke('db:query', sql, params)
+    })
+
     contextBridge.exposeInMainWorld('qvacAPI', {
       loadModel: (): Promise<string> => ipcRenderer.invoke('load-model'),
       infer: (history: { role: string; content: string }[]): Promise<void> =>

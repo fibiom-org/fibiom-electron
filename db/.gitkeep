@@ -1,0 +1,2 @@
+# Local SQLite database lives here (app.sqlite) in development.
+# The .sqlite file itself is gitignored — see .gitignore.
