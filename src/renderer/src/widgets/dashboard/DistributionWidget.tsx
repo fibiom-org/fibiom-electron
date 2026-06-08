@@ -2,6 +2,7 @@ import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 import type { DistributionSlice } from '@renderer/entities/dashboard/model/types'
 import ChartCard from '@renderer/shared/ui/ChartCard'
 import { CHART_COLORS } from '@renderer/shared/config/charts'
+import { formatCurrency } from '@renderer/shared/lib/format'
 
 interface DistributionWidgetProps {
   title: string
@@ -11,7 +12,7 @@ interface DistributionWidgetProps {
 function DistributionWidget({ title, slices }: DistributionWidgetProps): React.JSX.Element {
   return (
     <ChartCard title={title}>
-      <div className="h-52">
+      <div className="h-48 sm:h-52">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -28,6 +29,7 @@ function DistributionWidget({ title, slices }: DistributionWidgetProps): React.J
               ))}
             </Pie>
             <Tooltip
+              formatter={(value) => formatCurrency(Number(value))}
               contentStyle={{
                 background: '#18181b',
                 border: '1px solid #27272a',
@@ -42,7 +44,7 @@ function DistributionWidget({ title, slices }: DistributionWidgetProps): React.J
         {slices.map((slice, i) => (
           <li key={slice.name} className="flex items-center gap-2">
             <span
-              className="h-2 w-2 rounded-full"
+              className="h-2 w-2 shrink-0 rounded-full"
               style={{ backgroundColor: CHART_COLORS[i % CHART_COLORS.length] }}
             />
             {slice.name}

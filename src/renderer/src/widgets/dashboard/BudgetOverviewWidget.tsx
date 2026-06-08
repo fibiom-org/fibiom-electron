@@ -1,20 +1,20 @@
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts'
-import type { MonthlyOverview } from '@renderer/entities/dashboard/model/types'
+import type { BudgetOverview } from '@renderer/entities/dashboard/model/types'
 import ChartCard from '@renderer/shared/ui/ChartCard'
 
-interface MonthlyOverviewWidgetProps {
-  overview: MonthlyOverview
+interface BudgetOverviewWidgetProps {
+  overview: BudgetOverview
 }
 
-function MonthlyOverviewWidget({ overview }: MonthlyOverviewWidgetProps): React.JSX.Element {
+function BudgetOverviewWidget({ overview }: BudgetOverviewWidgetProps): React.JSX.Element {
   const gaugeData = [
-    { name: 'used', value: overview.usagePercent },
-    { name: 'rest', value: 100 - overview.usagePercent }
+    { name: 'used', value: overview.spentPercent },
+    { name: 'rest', value: 100 - overview.spentPercent }
   ]
 
   return (
     <ChartCard title="Monthly overview">
-      <div className="relative h-52">
+      <div className="relative h-48 sm:h-52">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -33,7 +33,7 @@ function MonthlyOverviewWidget({ overview }: MonthlyOverviewWidgetProps): React.
           </PieChart>
         </ResponsiveContainer>
         <div className="pointer-events-none absolute inset-x-0 bottom-8 text-center">
-          <p className="text-2xl font-semibold">{overview.usagePercent}%</p>
+          <p className="text-2xl font-semibold">{overview.spentPercent}%</p>
           <p className="text-xs text-zinc-500">{overview.label}</p>
         </div>
       </div>
@@ -41,4 +41,4 @@ function MonthlyOverviewWidget({ overview }: MonthlyOverviewWidgetProps): React.
   )
 }
 
-export default MonthlyOverviewWidget
+export default BudgetOverviewWidget
