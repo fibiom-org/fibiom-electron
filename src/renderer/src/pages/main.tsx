@@ -1,72 +1,46 @@
 import AppShell from '@renderer/components/layout/AppShell'
-import Card from '@renderer/components/ui/Card'
-
-const stats = [
-  { label: 'Active models', value: '3', delta: '+1 this week' },
-  { label: 'Inferences', value: '12.4k', delta: '+8.2%' },
-  { label: 'Avg latency', value: '142ms', delta: '-12ms' },
-  { label: 'Storage', value: '2.1 GB', delta: 'db/app.sqlite' }
-]
-
-const activity = [
-  { title: 'Model llama-3.2-1b loaded', time: '2 min ago' },
-  { title: 'New chat session started', time: '18 min ago' },
-  { title: 'Database connected (sqlite)', time: '1 hour ago' },
-  { title: 'Workspace synced', time: 'Yesterday' }
-]
+import { useDashboardData } from '@renderer/entities/dashboard/model/useDashboardData'
+import { useDashboardPeriod } from '@renderer/features/dashboard-period/model/useDashboardPeriod'
+import DashboardSummaryBar from '@renderer/widgets/dashboard/DashboardSummaryBar'
+import DashboardToolbar from '@renderer/widgets/dashboard/DashboardToolbar'
+import DistributionWidget from '@renderer/widgets/dashboard/DistributionWidget'
+import MonthlyInferencesWidget from '@renderer/widgets/dashboard/MonthlyInferencesWidget'
+import MonthlyOverviewWidget from '@renderer/widgets/dashboard/MonthlyOverviewWidget'
 
 function MainPage(): React.JSX.Element {
+  const period = useDashboardPeriod()
+  const { data, loading } = useDashboardData(period)
+
   return (
     <AppShell title="Dashboard">
-      <div className="space-y-8">
-        <div>
-          <h2 className="text-2xl font-semibold">
-            Welcome back <span className="text-zinc-500">👋</span>
-          </h2>
-          <p className="mt-1 text-sm text-zinc-500">Here&apos;s what&apos;s happening today.</p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((s) => (
-            <Card key={s.label}>
-              <p className="text-sm text-zinc-500">{s.label}</p>
-              <p className="mt-2 text-2xl font-semibold">{s.value}</p>
-              <p className="mt-1 text-xs text-emerald-400">{s.delta}</p>
-            </Card>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-          <Card className="lg:col-span-2">
-            <h3 className="mb-4 font-semibold">Recent activity</h3>
-            <ul className="space-y-3">
-              {activity.map((a) => (
-                <li key={a.title} className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-3">
-                    <span className="h-2 w-2 rounded-full bg-indigo-500" />
-                    {a.title}
-                  </span>
-                  <span className="text-zinc-600">{a.time}</span>
-                </li>
-              ))}
-            </ul>
-          </Card>
-
-          <Card>
-            <h3 className="mb-4 font-semibold">Quick actions</h3>
-            <div className="space-y-2 text-sm">
-              <button className="w-full rounded-xl border border-zinc-800 px-4 py-3 text-left hover:bg-zinc-800/50">
-                ＋ New chat
-              </button>
-              <button className="w-full rounded-xl border border-zinc-800 px-4 py-3 text-left hover:bg-zinc-800/50">
-                ⤓ Load a model
-              </button>
-              <button className="w-full rounded-xl border border-zinc-800 px-4 py-3 text-left hover:bg-zinc-800/50">
-                ⛁ Configure database
-              </button>
+      <div className="space-y-6">
+        {loading || !data ? (
+          <p className="text-sm text-zinc-500">Loading dashboard…</p>
+        ) : (
+          <>
+            <DashboardSummaryBar summary={data.summary} />
+            <DashboardToolbar
+              month={period.month}
+              year={period.year}
+              lastUpdated={data.lastUpdated}
+              onMonthChange={period.setFromInput}
+            />
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+              <div className="lg:col-span-3">
+                <MonthlyOverviewWidget overview={data.overview} />
+              </div>
+              <div className="lg:col-span-9">
+                <MonthlyInferencesWidget points={data.monthlyInferences} />
+              </div>
             </div>
-          </Card>
-        </div>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <DistributionWidget title="Model usage" slices={data.modelUsage} />
+              <DistributionWidget title="Storage breakdown" slices={data.storageBreakdown} />
+              <DistributionWidget title="Inference types" slices={data.inferenceTypes} />
+              <DistributionWidget title="Resource usage" slices={data.resourceUsage} />
+            </div>
+          </>
+        )}
       </div>
     </AppShell>
   )
