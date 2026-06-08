@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-An Electron + React 19 + TypeScript desktop app scaffolded from the `electron-vite` React template. It has a routed UI (auth gate → dashboard) and a pluggable database layer. The longer-term feature is a local LLM chat that runs a model **on-device** through Tether's QVAC SDK (`@qvac/sdk`) — no remote inference; that chat UI lives in `src/renderer/src/App.tsx` but is currently unused (see QVAC note below).
+An Electron + React 19 + TypeScript desktop app scaffolded from the `electron-vite` React template. Development trajectory: see [`docs/roadmap.md`](docs/roadmap.md). It has a routed UI (auth gate → dashboard) and a pluggable database layer. The longer-term feature is a local LLM chat that runs a model **on-device** through Tether's QVAC SDK (`@qvac/sdk`) — no remote inference; that chat UI lives in `src/renderer/src/App.tsx` but is currently unused (see QVAC note below).
 
 ## Commands
 
