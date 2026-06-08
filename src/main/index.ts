@@ -2,7 +2,7 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { getDb } from './db'
+import * as secureStore from './secure-store'
 
 function createWindow(): void {
   // Create the browser window.
@@ -53,6 +53,7 @@ app.whenReady().then(() => {
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
 
+  registerAuthHandlers()
   registerDbHandlers()
 
   createWindow()
@@ -73,12 +74,24 @@ app.on('window-all-closed', () => {
   }
 })
 
+// Master-key auth IPC. The renderer drives the secure store's lifecycle through
+// `window.authAPI` — the master key only ever lives in the main process.
+function registerAuthHandlers(): void {
+  ipcMain.handle('auth:status', () => secureStore.status())
+  ipcMain.handle('auth:setup', (_event, masterKey: string) => secureStore.setup(masterKey))
+  ipcMain.handle('auth:unlock', (_event, masterKey: string) => secureStore.unlock(masterKey))
+  ipcMain.handle('auth:lock', () => secureStore.lock())
+  ipcMain.handle('auth:reset', () => secureStore.reset())
+}
+
 // Database IPC. The renderer never touches the DB directly — it goes through
 // `window.dbAPI` (preload) which invokes these channels in the main process.
+// Every call hits the encrypted store, which throws while locked, so there is
+// no data access without the master key.
 function registerDbHandlers(): void {
-  ipcMain.handle('db:status', () => getDb().status())
+  ipcMain.handle('db:status', () => secureStore.status())
   ipcMain.handle('db:query', (_event, sql: string, params?: unknown[]) =>
-    getDb().query(sql, params)
+    secureStore.query(sql, params)
   )
 }
 

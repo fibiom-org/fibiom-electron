@@ -1,37 +1,57 @@
-import { createContext, useContext, useMemo, type ReactNode } from 'react'
-import { useLocalStorage } from '@renderer/hooks/use-local-storage'
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 
-export interface User {
-  email: string
-  name: string
+interface AuthState {
+  initialized: boolean
+  unlocked: boolean
 }
 
-interface AuthContextValue {
-  user: User | null
-  login: (email: string) => Promise<void>
-  logout: () => void
+interface AuthContextValue extends AuthState {
+  loading: boolean
+  setup: (masterKey: string) => Promise<void>
+  unlock: (masterKey: string) => Promise<boolean>
+  lock: () => Promise<void>
+  reset: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-/**
- * Mock auth provider. Persists a fake user in localStorage so the auth gate
- * survives reloads. Replace `login` with a real call (IPC -> main -> db/API)
- * once the backend exists.
- */
-export function AuthProvider({ children }: { children: ReactNode }): React.JSX.Element {
-  const [user, setUser] = useLocalStorage<User | null>('auth.user', null)
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [state, setState] = useState<AuthState>({
+    initialized: false,
+    unlocked: false
+  })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    window.authAPI
+      .status()
+      .then(setState)
+      .finally(() => setLoading(false))
+  }, [])
 
   const value = useMemo<AuthContextValue>(
     () => ({
-      user,
-      login: async (email) => {
-        // TODO: replace with real authentication
-        setUser({ email, name: email.split('@')[0] || 'User' })
+      ...state,
+      loading,
+      setup: async (masterKey) => {
+        await window.authAPI.setup(masterKey)
+        setState({ initialized: true, unlocked: true })
       },
-      logout: () => setUser(null)
+      unlock: async (masterKey) => {
+        const ok = await window.authAPI.unlock(masterKey)
+        if (ok) setState({ initialized: true, unlocked: true })
+        return ok
+      },
+      lock: async () => {
+        await window.authAPI.lock()
+        setState((s) => ({ ...s, unlocked: false }))
+      },
+      reset: async () => {
+        await window.authAPI.reset()
+        setState({ initialized: false, unlocked: false })
+      }
     }),
-    [user, setUser]
+    [state, loading]
   )
 
   return <AuthContext value={value}>{children}</AuthContext>

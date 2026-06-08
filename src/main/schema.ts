@@ -1,0 +1,154 @@
+import type Database from 'better-sqlite3-multiple-ciphers'
+
+/**
+ * Database schema + migrations for the encrypted store.
+ *
+ * Versioning uses SQLite's built-in `PRAGMA user_version`. Each entry in
+ * `migrations` upgrades the db by exactly one version; `runMigrations` applies
+ * every pending one in a transaction, so it is safe to call on every open
+ * (a fully-migrated db is a no-op).
+ *
+ * Conventions: integer surrogate PKs, `REAL` for money (amounts/balances),
+ * ISO-8601 `TEXT` timestamps (`datetime('now')`), enums enforced with CHECK,
+ * and `ON DELETE CASCADE` from a project down to everything it owns.
+ */
+
+const V1 = `
+  CREATE TABLE IF NOT EXISTS users (
+    id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+    master_password_hash TEXT NOT NULL,
+    created_at           TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+
+  CREATE TABLE IF NOT EXISTS projects (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name        TEXT NOT NULL,
+    type        TEXT NOT NULL CHECK (type IN ('personal', 'business')),
+    currency    TEXT NOT NULL,
+    description TEXT,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_projects_user ON projects(user_id);
+
+  -- business projects only: the people who share the project
+  CREATE TABLE IF NOT EXISTS project_members (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    name       TEXT NOT NULL,
+    email      TEXT,
+    role       TEXT NOT NULL CHECK (role IN ('owner', 'admin', 'member', 'viewer')),
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_members_project ON project_members(project_id);
+
+  -- bank / crypto wallet / cash / card
+  CREATE TABLE IF NOT EXISTS accounts (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id      INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    name            TEXT NOT NULL,
+    type            TEXT NOT NULL CHECK (type IN ('bank', 'crypto', 'cash', 'card')),
+    currency        TEXT NOT NULL,
+    initial_balance REAL NOT NULL DEFAULT 0
+  );
+  CREATE INDEX IF NOT EXISTS idx_accounts_project ON accounts(project_id);
+
+  -- project_id NULL = global category shared across projects
+  CREATE TABLE IF NOT EXISTS categories (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+    name       TEXT NOT NULL,
+    color      TEXT,
+    icon       TEXT,
+    type       TEXT NOT NULL CHECK (type IN ('income', 'expense')),
+    parent_id  INTEGER REFERENCES categories(id) ON DELETE CASCADE
+  );
+  CREATE INDEX IF NOT EXISTS idx_categories_project ON categories(project_id);
+  CREATE INDEX IF NOT EXISTS idx_categories_parent ON categories(parent_id);
+
+  CREATE TABLE IF NOT EXISTS transactions (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id  INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    account_id  INTEGER NOT NULL REFERENCES accounts(id) ON DELETE RESTRICT,
+    category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
+    member_id   INTEGER REFERENCES project_members(id) ON DELETE SET NULL,
+    amount      REAL NOT NULL,
+    type        TEXT NOT NULL CHECK (type IN ('income', 'expense', 'transfer')),
+    description TEXT,
+    date        TEXT NOT NULL,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_tx_project ON transactions(project_id);
+  CREATE INDEX IF NOT EXISTS idx_tx_account ON transactions(account_id);
+  CREATE INDEX IF NOT EXISTS idx_tx_category ON transactions(category_id);
+  CREATE INDEX IF NOT EXISTS idx_tx_date ON transactions(date);
+
+  -- receipt photos; parsed_data is JSON from QVAC parsing
+  CREATE TABLE IF NOT EXISTS receipts (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    transaction_id INTEGER NOT NULL REFERENCES transactions(id) ON DELETE CASCADE,
+    file_path      TEXT NOT NULL,
+    parsed_data    TEXT
+  );
+  CREATE INDEX IF NOT EXISTS idx_receipts_tx ON receipts(transaction_id);
+
+  CREATE TABLE IF NOT EXISTS tags (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    name       TEXT NOT NULL,
+    UNIQUE (project_id, name)
+  );
+
+  CREATE TABLE IF NOT EXISTS transaction_tags (
+    transaction_id INTEGER NOT NULL REFERENCES transactions(id) ON DELETE CASCADE,
+    tag_id         INTEGER NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+    PRIMARY KEY (transaction_id, tag_id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_txtags_tag ON transaction_tags(tag_id);
+
+  -- category_id NULL = overall project budget
+  CREATE TABLE IF NOT EXISTS budgets (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id  INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    category_id INTEGER REFERENCES categories(id) ON DELETE CASCADE,
+    amount      REAL NOT NULL,
+    period      TEXT NOT NULL CHECK (period IN ('monthly', 'quarterly', 'yearly')),
+    start_date  TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_budgets_project ON budgets(project_id);
+
+  CREATE TABLE IF NOT EXISTS goals (
+    id             INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id     INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    name           TEXT NOT NULL,
+    target_amount  REAL NOT NULL,
+    current_amount REAL NOT NULL DEFAULT 0,
+    deadline       TEXT,
+    created_at     TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_goals_project ON goals(project_id);
+
+  -- AI CFO chat history
+  CREATE TABLE IF NOT EXISTS ai_chats (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    role       TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
+    content    TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_chats_project ON ai_chats(project_id);
+`
+
+/** Ordered migrations; index N upgrades user_version N → N+1. */
+const migrations: ((db: Database.Database) => void)[] = [(db) => db.exec(V1)]
+
+/** Apply every pending migration. Idempotent — safe to call on every open. */
+export function runMigrations(db: Database.Database): void {
+  const current = db.pragma('user_version', { simple: true }) as number
+  for (let v = current; v < migrations.length; v++) {
+    db.transaction(() => {
+      migrations[v](db)
+      db.pragma(`user_version = ${v + 1}`)
+    })()
+  }
+}

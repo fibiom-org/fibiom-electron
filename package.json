@@ -4,6 +4,7 @@
   "description": "An Electron application with React and TypeScript",
   "main": "./out/main/index.js",
   "author": "example.com",
+  "license": "MIT",
   "homepage": "https://electron-vite.org",
   "scripts": {
     "fmt": "oxfmt",
@@ -26,6 +27,8 @@
     "@electron-toolkit/preload": "^3.0.2",
     "@electron-toolkit/utils": "^4.0.0",
     "@tailwindcss/vite": "^4.3.0",
+    "argon2": "^0.44.0",
+    "better-sqlite3-multiple-ciphers": "^12.10.0",
     "electron-updater": "^6.3.9",
     "react-router-dom": "^7.17.0",
     "tailwindcss": "^4.3.0"
