@@ -12,8 +12,17 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', api)
 
+    contextBridge.exposeInMainWorld('authAPI', {
+      status: (): Promise<{ initialized: boolean; unlocked: boolean }> =>
+        ipcRenderer.invoke('auth:status'),
+      setup: (masterKey: string): Promise<void> => ipcRenderer.invoke('auth:setup', masterKey),
+      unlock: (masterKey: string): Promise<boolean> => ipcRenderer.invoke('auth:unlock', masterKey),
+      lock: (): Promise<void> => ipcRenderer.invoke('auth:lock'),
+      reset: (): Promise<void> => ipcRenderer.invoke('auth:reset')
+    })
+
     contextBridge.exposeInMainWorld('dbAPI', {
-      status: (): Promise<{ driver: string; connected: boolean; target: string }> =>
+      status: (): Promise<{ initialized: boolean; unlocked: boolean }> =>
         ipcRenderer.invoke('db:status'),
       query: <T = unknown>(sql: string, params?: unknown[]): Promise<T[]> =>
         ipcRenderer.invoke('db:query', sql, params)

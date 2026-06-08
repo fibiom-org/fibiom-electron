@@ -9,11 +9,8 @@ const nav = [
   { label: 'Settings', icon: '⚙', active: false }
 ]
 
-/**
- * Sidebar + top bar chrome shared by the authenticated pages.
- */
 function AppShell({ title, children }: { title: string; children: ReactNode }): React.JSX.Element {
-  const { user, logout } = useAuth()
+  const { lock } = useAuth()
 
   return (
     <div className="flex h-screen bg-zinc-950 text-zinc-100">
@@ -40,10 +37,12 @@ function AppShell({ title, children }: { title: string; children: ReactNode }): 
           ))}
         </nav>
         <div className="mt-auto rounded-xl border border-zinc-800 p-3">
-          <p className="truncate text-sm font-medium">{user?.name}</p>
-          <p className="truncate text-xs text-zinc-500">{user?.email}</p>
-          <Button variant="ghost" className="mt-2 w-full" onClick={logout}>
-            Sign out
+          <p className="flex items-center gap-2 text-sm font-medium">
+            <span className="text-emerald-400">🔓</span> Vault unlocked
+          </p>
+          <p className="truncate text-xs text-zinc-500">Encrypted local store</p>
+          <Button variant="ghost" className="mt-2 w-full" onClick={lock}>
+            Lock
           </Button>
         </div>
       </aside>

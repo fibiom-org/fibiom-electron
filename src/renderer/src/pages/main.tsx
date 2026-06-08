@@ -1,4 +1,3 @@
-import { useAuth } from '@renderer/features/auth/AuthContext'
 import AppShell from '@renderer/components/layout/AppShell'
 import Card from '@renderer/components/ui/Card'
 
@@ -17,14 +16,12 @@ const activity = [
 ]
 
 function MainPage(): React.JSX.Element {
-  const { user } = useAuth()
-
   return (
     <AppShell title="Dashboard">
       <div className="space-y-8">
         <div>
           <h2 className="text-2xl font-semibold">
-            Welcome back, {user?.name} <span className="text-zinc-500">👋</span>
+            Welcome back <span className="text-zinc-500">👋</span>
           </h2>
           <p className="mt-1 text-sm text-zinc-500">Here&apos;s what&apos;s happening today.</p>
         </div>
