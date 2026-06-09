@@ -25,11 +25,12 @@ function AppShell({ title, children }: { title: string; children: ReactNode }): 
           {nav.map((item) => (
             <button
               key={item.label}
-              className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${
-                item.active
-                  ? 'bg-zinc-800 text-white'
-                  : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
-              }`}
+              className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors 
+                ${
+                  item.active
+                    ? 'bg-zinc-800 text-white'
+                    : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
+                }`}
             >
               <span className="text-zinc-500">{item.icon}</span>
               {item.label}

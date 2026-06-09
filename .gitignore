@@ -8,3 +8,8 @@ out
 # Local SQLite database (keep the db/ folder, ignore the data files)
 db/*.sqlite
 db/*.sqlite-*
+db/auth.json
+
+# electron-vite writes a transpiled temp config next to the .ts one; it is
+# normally auto-deleted but can be left behind after a crash.
+electron.vite.config.*.mjs

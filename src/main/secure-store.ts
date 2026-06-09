@@ -38,6 +38,13 @@ const ARGON2_OPTS = {
   parallelism: 1
 } as const
 
+const SEED_CATEGORIES: { name: string; type: 'income' | 'expense' }[] = [
+  { name: 'Food', type: 'expense' },
+  { name: 'Transport', type: 'expense' },
+  { name: 'Salary', type: 'income' },
+  { name: 'Entertainment', type: 'expense' },
+  { name: 'Other', type: 'expense' }
+]
 let db: Database.Database | null = null
 
 function baseDir(): string {
@@ -86,6 +93,43 @@ async function ensureUser(conn: Database.Database, masterKey: string): Promise<v
   conn.prepare('INSERT INTO users (master_password_hash) VALUES (?)').run(hash)
 }
 
+/**
+ * Seed the minimum data a transaction needs
+ */
+function ensureSeed(conn: Database.Database): void {
+  const userId = conn.prepare('SELECT id FROM users ORDER BY id LIMIT 1').get() as
+    | { id: number }
+    | undefined
+  if (!userId) return
+
+  const { p } = conn.prepare('SELECT count(*) AS p FROM projects').get() as { p: number }
+  if (p === 0) {
+    conn
+      .prepare(
+        "INSERT INTO projects (user_id, name, type, currency) VALUES (?, 'Personal', 'personal', 'USD')"
+      )
+      .run(userId.id)
+  }
+  const project = conn.prepare('SELECT id FROM projects ORDER BY id LIMIT 1').get() as {
+    id: number
+  }
+
+  const { a } = conn.prepare('SELECT count(*) AS a FROM accounts').get() as { a: number }
+  if (a === 0) {
+    conn
+      .prepare(
+        "INSERT INTO accounts (project_id, name, type, currency) VALUES (?, 'Cash', 'cash', 'USD')"
+      )
+      .run(project.id)
+  }
+
+  const { c } = conn.prepare('SELECT count(*) AS c FROM categories').get() as { c: number }
+  if (c === 0) {
+    const insert = conn.prepare('INSERT INTO categories (project_id, name, type) VALUES (?, ?, ?)')
+    for (const cat of SEED_CATEGORIES) insert.run(project.id, cat.name, cat.type)
+  }
+}
+
 export function status(): AuthStatus {
   return { initialized: isInitialized(), unlocked: db !== null }
 }
@@ -101,6 +145,7 @@ export async function setup(masterKey: string): Promise<void> {
   const conn = keyedConnection(hexKey)
   runMigrations(conn)
   await ensureUser(conn, masterKey)
+  ensureSeed(conn)
 
   const meta: Meta = {
     salt: salt.toString('hex'),
@@ -128,6 +173,7 @@ export async function unlock(masterKey: string): Promise<boolean> {
   }
   runMigrations(conn)
   await ensureUser(conn, masterKey)
+  ensureSeed(conn)
   db = conn
   return true
 }

@@ -93,6 +93,9 @@ function registerDbHandlers(): void {
   ipcMain.handle('db:query', (_event, sql: string, params?: unknown[]) =>
     secureStore.query(sql, params)
   )
+  ipcMain.handle('db:exec', (_event, sql: string, params?: unknown[]) =>
+    secureStore.exec(sql, params)
+  )
 }
 
 // In this file you can include the rest of your app's specific main process

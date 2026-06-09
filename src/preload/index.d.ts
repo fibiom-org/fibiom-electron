@@ -21,6 +21,7 @@ interface AuthAPI {
 interface DbAPI {
   status: () => Promise<AuthStatus>
   query: <T = unknown>(sql: string, params?: unknown[]) => Promise<T[]>
+  exec: (sql: string, params?: unknown[]) => Promise<void>
 }
 
 interface QvacAPI {

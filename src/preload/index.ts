@@ -25,7 +25,9 @@ if (process.contextIsolated) {
       status: (): Promise<{ initialized: boolean; unlocked: boolean }> =>
         ipcRenderer.invoke('db:status'),
       query: <T = unknown>(sql: string, params?: unknown[]): Promise<T[]> =>
-        ipcRenderer.invoke('db:query', sql, params)
+        ipcRenderer.invoke('db:query', sql, params),
+      exec: (sql: string, params?: unknown[]): Promise<void> =>
+        ipcRenderer.invoke('db:exec', sql, params)
     })
 
     contextBridge.exposeInMainWorld('qvacAPI', {
