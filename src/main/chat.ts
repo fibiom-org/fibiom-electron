@@ -22,18 +22,13 @@ export interface ChatWithMessages extends ChatRow {
 }
 
 function defaultProjectId(): number {
-  const row = secureStore.query<{ id: number }>(
-    'SELECT id FROM projects ORDER BY id LIMIT 1'
-  )[0]
+  const row = secureStore.query<{ id: number }>('SELECT id FROM projects ORDER BY id LIMIT 1')[0]
   if (!row) throw new Error('No project found — complete onboarding first')
   return row.id
 }
 
 function touchChat(chatId: number): void {
-  secureStore.exec(
-    "UPDATE chats SET updated_at = datetime('now') WHERE id = ?",
-    [chatId]
-  )
+  secureStore.exec("UPDATE chats SET updated_at = datetime('now') WHERE id = ?", [chatId])
 }
 
 export function listChats(projectId?: number): ChatRow[] {
@@ -86,15 +81,14 @@ export function appendMessage(
   role: ChatMessageRow['role'],
   content: string
 ): ChatMessageRow {
-  const chat = secureStore.query<{ id: number }>('SELECT id FROM chats WHERE id = ?', [
-    chatId
-  ])[0]
+  const chat = secureStore.query<{ id: number }>('SELECT id FROM chats WHERE id = ?', [chatId])[0]
   if (!chat) throw new Error(`Chat ${chatId} not found`)
 
-  secureStore.exec(
-    'INSERT INTO chat_messages (chat_id, role, content) VALUES (?, ?, ?)',
-    [chatId, role, content]
-  )
+  secureStore.exec('INSERT INTO chat_messages (chat_id, role, content) VALUES (?, ?, ?)', [
+    chatId,
+    role,
+    content
+  ])
   touchChat(chatId)
 
   return secureStore.query<ChatMessageRow>(
@@ -114,7 +108,7 @@ export function updateChatTitle(
   titleStatus: ChatRow['title_status'] = 'ready'
 ): ChatRow {
   secureStore.exec(
-    'UPDATE chats SET title = ?, title_status = ?, updated_at = datetime(\'now\') WHERE id = ?',
+    "UPDATE chats SET title = ?, title_status = ?, updated_at = datetime('now') WHERE id = ?",
     [title, titleStatus, chatId]
   )
   const chat = secureStore.query<ChatRow>(
@@ -135,18 +129,75 @@ export function mockGenerateTitle(chatId: number): ChatRow {
     [chatId]
   )[0]
 
-  const title = firstUser ? summarizeMock(firstUser.content) : 'New chat'
+  const firstAssistant = secureStore.query<{ content: string }>(
+    `SELECT content FROM chat_messages
+     WHERE chat_id = ? AND role = 'assistant'
+     ORDER BY created_at ASC, id ASC
+     LIMIT 1`,
+    [chatId]
+  )[0]
+
+  const title = summarizeMock(firstUser?.content ?? '', firstAssistant?.content ?? '')
   return updateChatTitle(chatId, title, 'ready')
 }
 
-function summarizeMock(text: string): string {
-  const cleaned = text.trim().replace(/\s+/g, ' ')
-  if (!cleaned) return 'New chat'
+const STOP_WORDS = new Set([
+  'a',
+  'an',
+  'the',
+  'my',
+  'me',
+  'i',
+  'we',
+  'you',
+  'your',
+  'can',
+  'could',
+  'would',
+  'should',
+  'how',
+  'what',
+  'when',
+  'where',
+  'why',
+  'is',
+  'are',
+  'do',
+  'does',
+  'did',
+  'please',
+  'help',
+  'tell',
+  'about',
+  'for',
+  'with',
+  'and',
+  'or',
+  'to',
+  'of',
+  'in',
+  'on'
+])
 
-  const words = cleaned.split(' ').slice(0, 6)
-  const summary = words.join(' ')
-  if (words.length < cleaned.split(' ').length) {
-    return `${summary.charAt(0).toUpperCase()}${summary.slice(1)}…`
+function summarizeMock(userText: string, assistantText: string): string {
+  const source = `${userText} ${assistantText}`.trim()
+  if (!source) return 'New chat'
+
+  const tokens = source
+    .toLowerCase()
+    .replace(/[^\w\s]/g, ' ')
+    .split(/\s+/)
+    .filter((word) => word.length > 2 && !STOP_WORDS.has(word))
+
+  const unique = [...new Set(tokens)].slice(0, 4)
+  if (unique.length === 0) {
+    const fallback = userText.trim().split(/\s+/).slice(0, 5).join(' ')
+    return capitalizeTitle(fallback || 'New chat')
   }
-  return summary.charAt(0).toUpperCase() + summary.slice(1)
+
+  return capitalizeTitle(unique.join(' '))
+}
+
+function capitalizeTitle(text: string): string {
+  return text.replace(/\b\w/g, (char) => char.toUpperCase())
 }
