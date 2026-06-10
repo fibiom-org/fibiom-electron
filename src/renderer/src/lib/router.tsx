@@ -24,8 +24,16 @@ export const router = createHashRouter([
             element: <ProjectDashboardPage />,
             handle: { title: 'Project' }
           },
-          { path: '/chats', element: <ChatsPage />, handle: { title: 'AI Chats' } },
-          { path: '/chats/:chatId', element: <ChatsPage />, handle: { title: 'AI Chats' } }
+          {
+            path: '/chats',
+            element: <ChatsPage />,
+            handle: { title: 'AI Chats' }
+          },
+          {
+            path: '/chats/:chatId',
+            element: <ChatsPage />,
+            handle: { title: 'AI Chats' }
+          }
         ]
       }
     ]
