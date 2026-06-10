@@ -87,6 +87,11 @@ function touchChat(chatId: number): void { ... }
 
 - `React.JSX.Element` / `JSX.Element` on components
 - `React.FC` / `FunctionComponent`
+- `useCallback` / `useMemo` — React Compiler handles memoization (see below)
+
+## React Compiler
+
+The renderer build uses `babel-plugin-react-compiler` via `@vitejs/plugin-react`. Do **not** add manual `useCallback` or `useMemo` for optimization — write plain functions and let the compiler memoize.
 
 ## Exceptions
 
