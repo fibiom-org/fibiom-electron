@@ -1,7 +1,7 @@
 import MonthPicker from '@renderer/features/dashboard-period/ui/MonthPicker'
 import FinanceModeToggle from '@renderer/features/finance-mode/ui/FinanceModeToggle'
 import { useCreateTransactionModal } from '@renderer/features/create-transaction'
-import Button from '@renderer/components/ui/Button'
+import { Button } from '@renderer/components/ui/Button'
 import type { FinanceMode } from '@renderer/entities/dashboard/model/types'
 
 interface DashboardToolbarProps {

@@ -1,6 +1,6 @@
 import { useFormContext } from 'react-hook-form'
 import type { ComponentProps, ReactNode } from 'react'
-import Button from '@renderer/components/ui/Button'
+import { Button } from '@renderer/components/ui/Button'
 
 interface FormButtonProps extends ComponentProps<typeof Button> {
   /** Shown instead of children while the form is submitting. */

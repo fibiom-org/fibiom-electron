@@ -1,7 +1,10 @@
 import type { HTMLAttributes } from 'react'
 import { cn } from '@renderer/lib/cn'
 
-function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>): React.JSX.Element {
+export const Card = ({
+  className,
+  ...props
+}: HTMLAttributes<HTMLDivElement>): React.JSX.Element => {
   return (
     <div
       className={cn(
@@ -12,5 +15,3 @@ function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>): React.JS
     />
   )
 }
-
-export default Card

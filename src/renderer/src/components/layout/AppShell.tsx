@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useAuth } from '@renderer/features/auth/AuthContext'
-import Button from '@renderer/components/ui/Button'
+import { Button } from '@renderer/components/ui/Button'
 
 const nav = [
   { label: 'Dashboard', icon: '◧', active: true },
@@ -9,7 +9,12 @@ const nav = [
   { label: 'Settings', icon: '⚙', active: false }
 ]
 
-function AppShell({ title, children }: { title: string; children: ReactNode }): React.JSX.Element {
+interface AppShellProps {
+  title: string
+  children: ReactNode
+}
+
+export const AppShell = ({ title, children }: AppShellProps): React.JSX.Element => {
   const { lock } = useAuth()
 
   return (
@@ -61,5 +66,3 @@ function AppShell({ title, children }: { title: string; children: ReactNode }): 
     </div>
   )
 }
-
-export default AppShell

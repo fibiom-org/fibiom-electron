@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@renderer/features/auth/AuthContext'
-import Button from '@renderer/components/ui/Button'
+import { Button } from '@renderer/components/ui/Button'
 
 const CONFIRM_WORD = 'RESET'
 

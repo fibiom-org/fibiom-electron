@@ -13,7 +13,11 @@ const variants: Record<Variant, string> = {
   outline: 'border border-zinc-700 text-zinc-200 hover:bg-zinc-800'
 }
 
-function Button({ variant = 'primary', className, ...props }: ButtonProps): React.JSX.Element {
+export const Button = ({
+  variant = 'primary',
+  className,
+  ...props
+}: ButtonProps): React.JSX.Element => {
   return (
     <button
       className={cn(
@@ -26,5 +30,3 @@ function Button({ variant = 'primary', className, ...props }: ButtonProps): Reac
     />
   )
 }
-
-export default Button

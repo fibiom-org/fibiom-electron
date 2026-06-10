@@ -3,7 +3,7 @@ import { useCreateTransaction } from '@renderer/features/create-transaction/mode
 import TransactionTypeToggle from '@renderer/features/create-transaction/ui/TransactionTypeToggle'
 import { CategorySelect } from '@renderer/features/create-transaction/ui/CategorySelect'
 import { Form, FormField, FormButton } from '@renderer/shared/ui'
-import Input from '@renderer/components/ui/Input'
+import { Input } from '@renderer/components/ui/Input'
 
 const CreateTransactionForm = ({
   onCreated
