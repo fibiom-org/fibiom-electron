@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import Button from './Button'
+import { Button } from './Button'
 
 type ModelState = 'checking' | 'ready' | 'missing' | 'downloading' | 'error'
 

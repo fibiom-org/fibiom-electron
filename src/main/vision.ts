@@ -11,7 +11,6 @@ import {
   type ModelProgressUpdate
 } from '@qvac/sdk'
 
-
 const MODEL = QWEN3VL_2B_MULTIMODAL_Q4_K
 const MMPROJ = MMPROJ_QWEN3VL_2B_MULTIMODAL_Q4_K
 const CTX_SIZE = 2048
@@ -50,7 +49,6 @@ function ensureModel(onProgress: (update: ModelProgressUpdate) => void): Promise
   }
   return loadingPromise
 }
-
 
 async function readStatus(): Promise<{ ready: boolean; loaded: boolean }> {
   if (modelId) return { ready: true, loaded: true }
