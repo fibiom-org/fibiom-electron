@@ -21,124 +21,14 @@ export interface ChatWithMessages extends ChatRow {
   messages: ChatMessageRow[]
 }
 
-function defaultProjectId(): number {
+const defaultProjectId = (): number => {
   const row = secureStore.query<{ id: number }>('SELECT id FROM projects ORDER BY id LIMIT 1')[0]
   if (!row) throw new Error('No project found — complete onboarding first')
   return row.id
 }
 
-function touchChat(chatId: number): void {
+const touchChat = (chatId: number): void => {
   secureStore.exec("UPDATE chats SET updated_at = datetime('now') WHERE id = ?", [chatId])
-}
-
-export function listChats(projectId?: number): ChatRow[] {
-  const pid = projectId ?? defaultProjectId()
-  return secureStore.query<ChatRow>(
-    `SELECT id, project_id, title, title_status, created_at, updated_at
-     FROM chats
-     WHERE project_id = ?
-     ORDER BY updated_at DESC, id DESC`,
-    [pid]
-  )
-}
-
-export function getChat(chatId: number): ChatWithMessages | null {
-  const chat = secureStore.query<ChatRow>(
-    `SELECT id, project_id, title, title_status, created_at, updated_at
-     FROM chats WHERE id = ?`,
-    [chatId]
-  )[0]
-  if (!chat) return null
-
-  const messages = secureStore.query<ChatMessageRow>(
-    `SELECT id, chat_id, role, content, created_at
-     FROM chat_messages
-     WHERE chat_id = ?
-     ORDER BY created_at ASC, id ASC`,
-    [chatId]
-  )
-
-  return { ...chat, messages }
-}
-
-export function createChat(projectId?: number, title?: string | null): ChatRow {
-  const pid = projectId ?? defaultProjectId()
-  secureStore.exec(
-    `INSERT INTO chats (project_id, title, title_status)
-     VALUES (?, ?, ?)`,
-    [pid, title ?? null, title ? 'ready' : 'pending']
-  )
-  const chat = secureStore.query<ChatRow>(
-    `SELECT id, project_id, title, title_status, created_at, updated_at
-     FROM chats
-     WHERE rowid = last_insert_rowid()`
-  )[0]
-  return chat
-}
-
-export function appendMessage(
-  chatId: number,
-  role: ChatMessageRow['role'],
-  content: string
-): ChatMessageRow {
-  const chat = secureStore.query<{ id: number }>('SELECT id FROM chats WHERE id = ?', [chatId])[0]
-  if (!chat) throw new Error(`Chat ${chatId} not found`)
-
-  secureStore.exec('INSERT INTO chat_messages (chat_id, role, content) VALUES (?, ?, ?)', [
-    chatId,
-    role,
-    content
-  ])
-  touchChat(chatId)
-
-  return secureStore.query<ChatMessageRow>(
-    `SELECT id, chat_id, role, content, created_at
-     FROM chat_messages
-     WHERE rowid = last_insert_rowid()`
-  )[0]
-}
-
-export function deleteChat(chatId: number): void {
-  secureStore.exec('DELETE FROM chats WHERE id = ?', [chatId])
-}
-
-export function updateChatTitle(
-  chatId: number,
-  title: string,
-  titleStatus: ChatRow['title_status'] = 'ready'
-): ChatRow {
-  secureStore.exec(
-    "UPDATE chats SET title = ?, title_status = ?, updated_at = datetime('now') WHERE id = ?",
-    [title, titleStatus, chatId]
-  )
-  const chat = secureStore.query<ChatRow>(
-    'SELECT id, project_id, title, title_status, created_at, updated_at FROM chats WHERE id = ?',
-    [chatId]
-  )[0]
-  if (!chat) throw new Error(`Chat ${chatId} not found`)
-  return chat
-}
-
-/** Rule-based placeholder until the LLM dev wires title generation via QVAC. */
-export function mockGenerateTitle(chatId: number): ChatRow {
-  const firstUser = secureStore.query<{ content: string }>(
-    `SELECT content FROM chat_messages
-     WHERE chat_id = ? AND role = 'user'
-     ORDER BY created_at ASC, id ASC
-     LIMIT 1`,
-    [chatId]
-  )[0]
-
-  const firstAssistant = secureStore.query<{ content: string }>(
-    `SELECT content FROM chat_messages
-     WHERE chat_id = ? AND role = 'assistant'
-     ORDER BY created_at ASC, id ASC
-     LIMIT 1`,
-    [chatId]
-  )[0]
-
-  const title = summarizeMock(firstUser?.content ?? '', firstAssistant?.content ?? '')
-  return updateChatTitle(chatId, title, 'ready')
 }
 
 const STOP_WORDS = new Set([
@@ -179,7 +69,11 @@ const STOP_WORDS = new Set([
   'on'
 ])
 
-function summarizeMock(userText: string, assistantText: string): string {
+const capitalizeTitle = (text: string): string => {
+  return text.replace(/\b\w/g, (char) => char.toUpperCase())
+}
+
+const summarizeMock = (userText: string, assistantText: string): string => {
   const source = `${userText} ${assistantText}`.trim()
   if (!source) return 'New chat'
 
@@ -198,6 +92,112 @@ function summarizeMock(userText: string, assistantText: string): string {
   return capitalizeTitle(unique.join(' '))
 }
 
-function capitalizeTitle(text: string): string {
-  return text.replace(/\b\w/g, (char) => char.toUpperCase())
+export const listChats = (projectId?: number): ChatRow[] => {
+  const pid = projectId ?? defaultProjectId()
+  return secureStore.query<ChatRow>(
+    `SELECT id, project_id, title, title_status, created_at, updated_at
+     FROM chats
+     WHERE project_id = ?
+     ORDER BY updated_at DESC, id DESC`,
+    [pid]
+  )
+}
+
+export const getChat = (chatId: number): ChatWithMessages | null => {
+  const chat = secureStore.query<ChatRow>(
+    `SELECT id, project_id, title, title_status, created_at, updated_at
+     FROM chats WHERE id = ?`,
+    [chatId]
+  )[0]
+  if (!chat) return null
+
+  const messages = secureStore.query<ChatMessageRow>(
+    `SELECT id, chat_id, role, content, created_at
+     FROM chat_messages
+     WHERE chat_id = ?
+     ORDER BY created_at ASC, id ASC`,
+    [chatId]
+  )
+
+  return { ...chat, messages }
+}
+
+export const createChat = (projectId?: number, title?: string | null): ChatRow => {
+  const pid = projectId ?? defaultProjectId()
+  secureStore.exec(
+    `INSERT INTO chats (project_id, title, title_status)
+     VALUES (?, ?, ?)`,
+    [pid, title ?? null, title ? 'ready' : 'pending']
+  )
+  const chat = secureStore.query<ChatRow>(
+    `SELECT id, project_id, title, title_status, created_at, updated_at
+     FROM chats
+     WHERE rowid = last_insert_rowid()`
+  )[0]
+  return chat
+}
+
+export const appendMessage = (
+  chatId: number,
+  role: ChatMessageRow['role'],
+  content: string
+): ChatMessageRow => {
+  const chat = secureStore.query<{ id: number }>('SELECT id FROM chats WHERE id = ?', [chatId])[0]
+  if (!chat) throw new Error(`Chat ${chatId} not found`)
+
+  secureStore.exec('INSERT INTO chat_messages (chat_id, role, content) VALUES (?, ?, ?)', [
+    chatId,
+    role,
+    content
+  ])
+  touchChat(chatId)
+
+  return secureStore.query<ChatMessageRow>(
+    `SELECT id, chat_id, role, content, created_at
+     FROM chat_messages
+     WHERE rowid = last_insert_rowid()`
+  )[0]
+}
+
+export const deleteChat = (chatId: number): void => {
+  secureStore.exec('DELETE FROM chats WHERE id = ?', [chatId])
+}
+
+export const updateChatTitle = (
+  chatId: number,
+  title: string,
+  titleStatus: ChatRow['title_status'] = 'ready'
+): ChatRow => {
+  secureStore.exec(
+    "UPDATE chats SET title = ?, title_status = ?, updated_at = datetime('now') WHERE id = ?",
+    [title, titleStatus, chatId]
+  )
+  const chat = secureStore.query<ChatRow>(
+    'SELECT id, project_id, title, title_status, created_at, updated_at FROM chats WHERE id = ?',
+    [chatId]
+  )[0]
+  if (!chat) throw new Error(`Chat ${chatId} not found`)
+  return chat
+}
+
+/** Rule-based placeholder until the LLM dev wires title generation via QVAC. */
+export const mockGenerateTitle = (chatId: number): ChatRow => {
+  const firstUser = secureStore.query<{ content: string }>(
+    `SELECT content FROM chat_messages
+     WHERE chat_id = ? AND role = 'user'
+     ORDER BY created_at ASC, id ASC
+     LIMIT 1`,
+    [chatId]
+  )[0]
+
+  const firstAssistant = secureStore.query<{ content: string }>(
+    `SELECT content FROM chat_messages
+     WHERE chat_id = ? AND role = 'assistant'
+     ORDER BY created_at ASC, id ASC
+     LIMIT 1`,
+    [chatId]
+  )[0]
+
+  const title = summarizeMock(firstUser?.content ?? '', firstAssistant?.content ?? '')
+  return updateChatTitle(chatId, title, 'ready')
 }

@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron'
 import * as chat from './chat'
 
-export function registerChatHandlers(): void {
+export const registerChatHandlers = (): void => {
   ipcMain.handle('chat:list', (_event, projectId?: number) => chat.listChats(projectId))
 
   ipcMain.handle('chat:get', (_event, chatId: number) => chat.getChat(chatId))

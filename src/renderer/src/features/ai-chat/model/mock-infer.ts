@@ -4,10 +4,14 @@ const MOCK_RESPONSES = [
   'Runway estimates depend on current cash balance and average monthly expenses. Open the dashboard runway widget for the latest numbers.'
 ]
 
-export async function mockInfer(
+const delay = (ms: number): Promise<void> => {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+export const mockInfer = async (
   userMessage: string,
   onToken: (token: string) => void
-): Promise<string> {
+): Promise<string> => {
   const pick =
     MOCK_RESPONSES[userMessage.length % MOCK_RESPONSES.length] ?? MOCK_RESPONSES[0]
   const words = pick.split(' ')
@@ -22,8 +26,4 @@ export async function mockInfer(
 
   onToken('')
   return full.trimEnd()
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms))
 }

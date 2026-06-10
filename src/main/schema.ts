@@ -161,7 +161,7 @@ const V2 = `
   CREATE INDEX IF NOT EXISTS idx_chat_messages_chat ON chat_messages(chat_id, created_at);
 `
 
-function migrateAiChatsToConversations(db: Database.Database): void {
+const migrateAiChatsToConversations = (db: Database.Database): void => {
   const legacy = db
     .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'ai_chats'")
     .get()
@@ -206,7 +206,7 @@ const migrations: ((db: Database.Database) => void)[] = [
 ]
 
 /** Apply every pending migration. Idempotent — safe to call on every open. */
-export function runMigrations(db: Database.Database): void {
+export const runMigrations = (db: Database.Database): void => {
   const current = db.pragma('user_version', { simple: true }) as number
   for (let v = current; v < migrations.length; v++) {
     db.transaction(() => {
