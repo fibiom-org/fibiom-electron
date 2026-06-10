@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 
 interface AuthState {
   initialized: boolean
@@ -15,7 +15,7 @@ interface AuthContextValue extends AuthState {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<AuthState>({
     initialized: false,
     unlocked: false
@@ -29,35 +29,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false))
   }, [])
 
-  const value = useMemo<AuthContextValue>(
-    () => ({
-      ...state,
-      loading,
-      setup: async (masterKey) => {
-        await window.authAPI.setup(masterKey)
-        setState({ initialized: true, unlocked: true })
-      },
-      unlock: async (masterKey) => {
-        const ok = await window.authAPI.unlock(masterKey)
-        if (ok) setState({ initialized: true, unlocked: true })
-        return ok
-      },
-      lock: async () => {
-        await window.authAPI.lock()
-        setState((s) => ({ ...s, unlocked: false }))
-      },
-      reset: async () => {
-        await window.authAPI.reset()
-        setState({ initialized: false, unlocked: false })
-      }
-    }),
-    [state, loading]
-  )
+  const value: AuthContextValue = {
+    ...state,
+    loading,
+    setup: async (masterKey) => {
+      await window.authAPI.setup(masterKey)
+      setState({ initialized: true, unlocked: true })
+    },
+    unlock: async (masterKey) => {
+      const ok = await window.authAPI.unlock(masterKey)
+      if (ok) setState({ initialized: true, unlocked: true })
+      return ok
+    },
+    lock: async () => {
+      await window.authAPI.lock()
+      setState((s) => ({ ...s, unlocked: false }))
+    },
+    reset: async () => {
+      await window.authAPI.reset()
+      setState({ initialized: false, unlocked: false })
+    }
+  }
 
-  return <AuthContext value={value}>{children}</AuthContext>
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-export function useAuth(): AuthContextValue {
+export const useAuth = (): AuthContextValue => {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth must be used within <AuthProvider>')
   return ctx

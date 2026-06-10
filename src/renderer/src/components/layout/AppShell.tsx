@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useMatches } from "react-router-dom";
 import { useAuth } from "@renderer/features/auth/AuthContext";
-import Button from "@renderer/components/ui/Button";
+import { Button } from "@renderer/components/ui/Button";
+import { cn } from "@renderer/lib/cn";
 import { ChartColumn, Database, Settings } from "lucide-react";
 
 const nav = [
@@ -10,16 +11,22 @@ const nav = [
   { label: "Settings", icon: <Settings />, path: null },
 ];
 
-function AppShell({
-  title,
-  children,
-}: {
-  title: string;
+interface RouteHandle {
+  title?: string;
+}
+
+interface AppShellProps {
   children: ReactNode;
-}): React.JSX.Element {
+}
+
+export const AppShell = ({ children }: AppShellProps) => {
   const { lock } = useAuth();
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
+  const matches = useMatches();
+  const title =
+    [...matches]
+      .reverse()
+      .map((match) => (match.handle as RouteHandle | undefined)?.title)
+      .find(Boolean) ?? "Fidiom";
 
   return (
     <div className="flex h-screen bg-zinc-950 text-zinc-100">
@@ -31,25 +38,24 @@ function AppShell({
           <span className="font-semibold">Fidiom</span>
         </div>
         <nav className="space-y-1">
-          {nav.map((item) => {
-            const active = item.path === pathname;
-            return (
-              <button
-                key={item.label}
-                disabled={!item.path}
-                onClick={() => item.path && navigate(item.path)}
-                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors
-                ${
-                  active
+          {nav.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === "/"}
+              className={({ isActive }) =>
+                cn(
+                  "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors",
+                  isActive
                     ? "bg-zinc-800 text-white"
-                    : "text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200"
-                } disabled:cursor-not-allowed disabled:opacity-40`}
-              >
-                <span className="text-zinc-500">{item.icon}</span>
-                {item.label}
-              </button>
-            );
-          })}
+                    : "text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200",
+                )
+              }
+            >
+              <span className="text-zinc-500">{item.icon}</span>
+              {item.label}
+            </NavLink>
+          ))}
         </nav>
         <div className="mt-auto rounded-xl border border-zinc-800 p-3">
           <p className="flex items-center gap-2 text-sm font-medium">
@@ -76,6 +82,6 @@ function AppShell({
       </div>
     </div>
   );
-}
+};
 
 export default AppShell;

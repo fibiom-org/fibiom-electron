@@ -1,7 +1,7 @@
-import MonthPicker from '@renderer/features/dashboard-period/ui/MonthPicker'
-import FinanceModeToggle from '@renderer/features/finance-mode/ui/FinanceModeToggle'
+import { MonthPicker } from '@renderer/features/dashboard-period/ui/MonthPicker'
+import { FinanceModeToggle } from '@renderer/features/finance-mode/ui/FinanceModeToggle'
 import { useCreateTransactionModal } from '@renderer/features/create-transaction'
-import Button from '@renderer/components/ui/Button'
+import { Button } from '@renderer/components/ui/Button'
 import type { FinanceMode } from '@renderer/entities/dashboard/model/types'
 
 interface DashboardToolbarProps {
@@ -12,13 +12,13 @@ interface DashboardToolbarProps {
   onModeChange: (mode: FinanceMode) => void
 }
 
-function DashboardToolbar({
+export const DashboardToolbar = ({
   month,
   year,
   mode,
   onMonthChange,
   onModeChange
-}: DashboardToolbarProps): React.JSX.Element {
+}: DashboardToolbarProps) => {
   const { open } = useCreateTransactionModal()
 
   return (
@@ -36,5 +36,3 @@ function DashboardToolbar({
     </div>
   )
 }
-
-export default DashboardToolbar

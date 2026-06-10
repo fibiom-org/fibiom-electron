@@ -1,12 +1,14 @@
 import type { TopCategory } from '@renderer/entities/dashboard/model/types'
-import ChartCard from '@renderer/shared/ui/ChartCard'
+import { ChartCard } from '@renderer/shared/ui/ChartCard'
 import { formatCurrency } from '@renderer/shared/lib/format'
 
 interface TopCategoriesWidgetProps {
   categories: TopCategory[]
 }
 
-function TopCategoriesWidget({ categories }: TopCategoriesWidgetProps): React.JSX.Element {
+export const TopCategoriesWidget = ({
+  categories
+}: TopCategoriesWidgetProps) => {
   return (
     <ChartCard title="Top spending categories">
       <ul className="space-y-3">
@@ -31,5 +33,3 @@ function TopCategoriesWidget({ categories }: TopCategoriesWidgetProps): React.JS
     </ChartCard>
   )
 }
-
-export default TopCategoriesWidget
