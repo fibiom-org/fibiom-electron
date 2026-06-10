@@ -14,7 +14,7 @@ const items = [
 
 export const DashboardSummaryBar = ({
   summary
-}: DashboardSummaryBarProps): React.JSX.Element => {
+}: DashboardSummaryBarProps) => {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {items.map((item) => {

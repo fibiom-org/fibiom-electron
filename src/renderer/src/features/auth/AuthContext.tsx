@@ -15,7 +15,7 @@ interface AuthContextValue extends AuthState {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-export const AuthProvider = ({ children }: { children: ReactNode }): React.JSX.Element => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [state, setState] = useState<AuthState>({
     initialized: false,
     unlocked: false

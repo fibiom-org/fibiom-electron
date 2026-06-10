@@ -4,7 +4,7 @@ import { useAuth } from '@renderer/features/auth/AuthContext'
 import { Button } from '@renderer/components/ui/Button'
 import { Input } from '@renderer/components/ui/Input'
 
-export const AuthPage = (): React.JSX.Element => {
+export const AuthPage = () => {
   const navigate = useNavigate()
 
   const { initialized, setup, unlock } = useAuth()

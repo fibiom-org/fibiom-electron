@@ -12,7 +12,7 @@ interface DistributionWidgetProps {
 export const DistributionWidget = ({
   title,
   slices
-}: DistributionWidgetProps): React.JSX.Element => {
+}: DistributionWidgetProps) => {
   return (
     <ChartCard title={title}>
       <div className="h-48 sm:h-52">

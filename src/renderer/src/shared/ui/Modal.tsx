@@ -15,7 +15,7 @@ export const Modal = ({
   title,
   children,
   className
-}: ModalProps): React.JSX.Element | null => {
+}: ModalProps) => {
   useEffect(() => {
     if (!open) return
     const onKeyDown = (e: KeyboardEvent): void => {

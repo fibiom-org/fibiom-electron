@@ -10,6 +10,8 @@ alwaysApply: false
 
 Use **arrow functions** for all components (pages, widgets, features, shared UI, providers).
 
+Do **not** annotate component return types — let TypeScript infer them from JSX.
+
 ```tsx
 // ✅ GOOD
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -20,12 +22,21 @@ export const Button = ({
   variant = 'primary',
   className,
   ...props
-}: ButtonProps): React.JSX.Element => {
+}: ButtonProps) => {
   return <button className={cn(variants[variant], className)} {...props} />
 }
 
-// ❌ BAD
-function Button({ variant = 'primary' }: ButtonProps): React.JSX.Element {
+// ✅ GOOD — null is inferred automatically
+export const Modal = ({ open, onClose, children }: ModalProps) => {
+  if (!open) return null
+  return <div>...</div>
+}
+
+// ❌ BAD — unnecessary explicit return type
+export const Button = (...): React.JSX.Element => { ... }
+
+// ❌ BAD — function declaration
+function Button({ variant = 'primary' }: ButtonProps) {
   return <button />
 }
 ```
@@ -39,29 +50,35 @@ function Button({ variant = 'primary' }: ButtonProps): React.JSX.Element {
 ## Props
 
 - Props interface: `ComponentNameProps`, declared above the component.
-- Return type: `React.JSX.Element` (or `React.JSX.Element | null` when needed).
+- Use `ReactNode` for `children` and render-prop return values — not as a component return type.
 
 ## Sub-components
 
 Private helpers in the same file — arrow functions, not exported:
 
 ```tsx
-const CategoryPill = ({ option }: { option: CategoryOption }): React.JSX.Element => (...)
+const CategoryPill = ({ option }: { option: CategoryOption }) => (...)
 ```
 
 ## Hooks & providers
 
-Same arrow style:
+Same arrow style, no return type on components:
 
 ```tsx
 export const useAuth = (): AuthContextValue => { ... }
-export const AuthProvider = ({ children }: { children: ReactNode }): React.JSX.Element => { ... }
+export const AuthProvider = ({ children }: { children: ReactNode }) => { ... }
 ```
+
+## Do not use
+
+- `React.JSX.Element` / `JSX.Element` on components
+- `React.FC` / `FunctionComponent`
 
 ## Exceptions
 
 - `forwardRef`: wrap arrow component in `forwardRef`, export with named export.
 - Generic components with constrained type params: arrow is fine; unconstrained generics may need a function declaration (rare).
+- Explicit return types only for exported library APIs or when inference fails.
 
 ## Layer placement (FSD)
 

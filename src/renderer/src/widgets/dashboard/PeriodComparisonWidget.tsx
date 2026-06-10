@@ -8,7 +8,7 @@ interface PeriodComparisonWidgetProps {
 
 export const PeriodComparisonWidget = ({
   comparison
-}: PeriodComparisonWidgetProps): React.JSX.Element => {
+}: PeriodComparisonWidgetProps) => {
   const isIncrease = comparison.changePercent > 0
 
   return (

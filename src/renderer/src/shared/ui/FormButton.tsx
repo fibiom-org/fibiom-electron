@@ -16,7 +16,7 @@ export const FormButton = ({
   pendingLabel,
   disabled,
   ...props
-}: FormButtonProps): React.JSX.Element => {
+}: FormButtonProps) => {
   const {
     formState: { isSubmitting }
   } = useFormContext()

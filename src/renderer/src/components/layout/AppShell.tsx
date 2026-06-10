@@ -14,7 +14,7 @@ interface AppShellProps {
   children: ReactNode
 }
 
-export const AppShell = ({ title, children }: AppShellProps): React.JSX.Element => {
+export const AppShell = ({ title, children }: AppShellProps) => {
   const { lock } = useAuth()
 
   return (

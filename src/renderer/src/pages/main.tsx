@@ -11,7 +11,7 @@ import { PeriodComparisonWidget } from '@renderer/widgets/dashboard/PeriodCompar
 import { RunwayCalculatorWidget } from '@renderer/widgets/dashboard/RunwayCalculatorWidget'
 import { TopCategoriesWidget } from '@renderer/widgets/dashboard/TopCategoriesWidget'
 
-export const MainPage = (): React.JSX.Element => {
+export const MainPage = () => {
   const period = useDashboardPeriod()
   const { mode, setMode, isBusiness } = useFinanceMode()
   const { data, loading } = useDashboardData(period, mode)

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export const Versions = (): React.JSX.Element => {
+export const Versions = () => {
   const [versions] = useState(window.electron.process.versions)
 
   return (

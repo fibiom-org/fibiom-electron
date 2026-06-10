@@ -18,7 +18,7 @@ export const Form = <TIn extends FieldValues, TCtx, TOut extends FieldValues>({
   onSubmit,
   children,
   className
-}: FormProps<TIn, TCtx, TOut>): React.JSX.Element => {
+}: FormProps<TIn, TCtx, TOut>) => {
   return (
     <FormProvider {...form}>
       <form onSubmit={onSubmit} className={className} noValidate>

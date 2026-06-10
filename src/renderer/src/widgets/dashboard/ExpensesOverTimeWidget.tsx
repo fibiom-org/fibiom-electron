@@ -19,7 +19,7 @@ interface ExpensesOverTimeWidgetProps {
 
 export const ExpensesOverTimeWidget = ({
   points
-}: ExpensesOverTimeWidgetProps): React.JSX.Element => {
+}: ExpensesOverTimeWidgetProps) => {
   return (
     <ChartCard title="Expenses over time">
       <div className="h-48 sm:h-52">

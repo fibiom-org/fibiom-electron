@@ -5,7 +5,7 @@ import { Button } from '@renderer/components/ui/Button'
 
 const CONFIRM_WORD = 'RESET'
 
-export const ResetPage = (): React.JSX.Element => {
+export const ResetPage = () => {
   const { reset } = useAuth()
   const navigate = useNavigate()
   const [confirmText, setConfirmText] = useState('')

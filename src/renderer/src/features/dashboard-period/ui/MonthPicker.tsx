@@ -4,7 +4,7 @@ interface MonthPickerProps {
   onChange: (value: string) => void
 }
 
-export const MonthPicker = ({ month, year, onChange }: MonthPickerProps): React.JSX.Element => {
+export const MonthPicker = ({ month, year, onChange }: MonthPickerProps) => {
   const value = `${year}-${String(month).padStart(2, '0')}`
 
   return (

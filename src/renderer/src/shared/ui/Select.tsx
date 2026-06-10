@@ -19,7 +19,7 @@ export const Select = ({
   id,
   ref,
   ...props
-}: SelectProps): React.JSX.Element => {
+}: SelectProps) => {
   return (
     <label className="block space-y-1.5">
       {label && <span className="text-sm font-medium text-zinc-400">{label}</span>}

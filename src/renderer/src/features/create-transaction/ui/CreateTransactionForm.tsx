@@ -11,7 +11,7 @@ interface CreateTransactionFormProps {
 
 export const CreateTransactionForm = ({
   onCreated
-}: CreateTransactionFormProps): React.JSX.Element => {
+}: CreateTransactionFormProps) => {
   const { form, submit } = useCreateTransaction(onCreated)
 
   return (

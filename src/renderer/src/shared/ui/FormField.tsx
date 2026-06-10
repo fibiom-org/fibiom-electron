@@ -20,7 +20,7 @@ export const FormField = ({
   label,
   required,
   children
-}: FormFieldProps): React.JSX.Element => {
+}: FormFieldProps) => {
   const {
     control,
     formState: { errors }

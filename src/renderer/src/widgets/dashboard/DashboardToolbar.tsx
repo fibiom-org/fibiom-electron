@@ -18,7 +18,7 @@ export const DashboardToolbar = ({
   mode,
   onMonthChange,
   onModeChange
-}: DashboardToolbarProps): React.JSX.Element => {
+}: DashboardToolbarProps) => {
   const { open } = useCreateTransactionModal()
 
   return (

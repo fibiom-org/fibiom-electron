@@ -8,7 +8,7 @@ interface TopCategoriesWidgetProps {
 
 export const TopCategoriesWidget = ({
   categories
-}: TopCategoriesWidgetProps): React.JSX.Element => {
+}: TopCategoriesWidgetProps) => {
   return (
     <ChartCard title="Top spending categories">
       <ul className="space-y-3">

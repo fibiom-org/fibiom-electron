@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 
 type Message = { role: 'user' | 'assistant'; content: string }
 
-export const App = (): React.JSX.Element => {
+export const App = () => {
   const [loading, setLoading] = useState(true)
   const [processing, setProcessing] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])

@@ -17,7 +17,7 @@ export const Button = ({
   variant = 'primary',
   className,
   ...props
-}: ButtonProps): React.JSX.Element => {
+}: ButtonProps) => {
   return (
     <button
       className={cn(

@@ -4,7 +4,7 @@ import { cn } from '@renderer/lib/cn'
 export const Card = ({
   className,
   ...props
-}: HTMLAttributes<HTMLDivElement>): React.JSX.Element => {
+}: HTMLAttributes<HTMLDivElement>) => {
   return (
     <div
       className={cn(

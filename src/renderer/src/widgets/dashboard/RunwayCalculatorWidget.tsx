@@ -8,7 +8,7 @@ interface RunwayCalculatorWidgetProps {
 
 export const RunwayCalculatorWidget = ({
   runway
-}: RunwayCalculatorWidgetProps): React.JSX.Element => {
+}: RunwayCalculatorWidgetProps) => {
   return (
     <ChartCard title="Runway calculator">
       <div className="space-y-4">

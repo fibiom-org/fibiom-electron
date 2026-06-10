@@ -20,7 +20,7 @@ export const CreateTransactionModalProvider = ({
   children
 }: {
   children: ReactNode
-}): React.JSX.Element => {
+}) => {
   const [isOpen, setIsOpen] = useState(false)
 
   const open = useCallback(() => setIsOpen(true), [])

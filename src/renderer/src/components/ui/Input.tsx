@@ -14,7 +14,7 @@ export const Input = ({
   id,
   ref,
   ...props
-}: InputProps): React.JSX.Element => {
+}: InputProps) => {
   return (
     <label className="block space-y-1.5">
       {label && <span className="text-sm font-medium text-zinc-400">{label}</span>}

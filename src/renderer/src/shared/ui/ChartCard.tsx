@@ -7,7 +7,7 @@ interface ChartCardProps {
   children: ReactNode
 }
 
-export const ChartCard = ({ title, className, children }: ChartCardProps): React.JSX.Element => {
+export const ChartCard = ({ title, className, children }: ChartCardProps) => {
   return (
     <div
       className={cn(
