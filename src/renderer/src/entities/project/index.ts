@@ -1,4 +1,5 @@
 export type {
+  CategorySlice,
   CreateProjectInput,
   DashboardPeriod,
   DeletePaymentInput,
@@ -21,16 +22,12 @@ export {
 } from './model/categories'
 export {
   computeBurn,
+  computeCash,
   computeRunway,
   getPaymentsInPeriod,
   paymentAppliesInPeriod
 } from './model/compute'
-export {
-  addPayment,
-  createProject,
-  deletePayment,
-  updatePayment
-} from './model/store'
+export { addPayment, createProject, deletePayment, updatePayment } from './model/store'
 export {
   useProject,
   useProjectDashboard,
