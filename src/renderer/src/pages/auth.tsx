@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@renderer/features/auth/AuthContext'
-import Button from '@renderer/components/ui/Button'
-import Input from '@renderer/components/ui/Input'
+import { Button } from '@renderer/components/ui/Button'
+import { Input } from '@renderer/components/ui/Input'
 
-function AuthPage() {
+export const AuthPage = () => {
   const navigate = useNavigate()
 
   const { initialized, setup, unlock } = useAuth()
@@ -115,5 +115,3 @@ function AuthPage() {
     </div>
   )
 }
-
-export default AuthPage

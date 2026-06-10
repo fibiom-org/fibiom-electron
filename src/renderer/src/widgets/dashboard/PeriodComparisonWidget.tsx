@@ -1,12 +1,14 @@
 import type { PeriodComparison } from '@renderer/entities/dashboard/model/types'
-import ChartCard from '@renderer/shared/ui/ChartCard'
+import { ChartCard } from '@renderer/shared/ui/ChartCard'
 import { formatCurrency, formatPercent } from '@renderer/shared/lib/format'
 
 interface PeriodComparisonWidgetProps {
   comparison: PeriodComparison
 }
 
-function PeriodComparisonWidget({ comparison }: PeriodComparisonWidgetProps): React.JSX.Element {
+export const PeriodComparisonWidget = ({
+  comparison
+}: PeriodComparisonWidgetProps) => {
   const isIncrease = comparison.changePercent > 0
 
   return (
@@ -34,5 +36,3 @@ function PeriodComparisonWidget({ comparison }: PeriodComparisonWidgetProps): Re
     </ChartCard>
   )
 }
-
-export default PeriodComparisonWidget

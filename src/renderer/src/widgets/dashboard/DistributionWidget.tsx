@@ -1,6 +1,6 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
 import type { DistributionSlice } from '@renderer/entities/dashboard/model/types'
-import ChartCard from '@renderer/shared/ui/ChartCard'
+import { ChartCard } from '@renderer/shared/ui/ChartCard'
 import { CHART_COLORS } from '@renderer/shared/config/charts'
 import { formatCurrency } from '@renderer/shared/lib/format'
 
@@ -9,7 +9,10 @@ interface DistributionWidgetProps {
   slices: DistributionSlice[]
 }
 
-function DistributionWidget({ title, slices }: DistributionWidgetProps): React.JSX.Element {
+export const DistributionWidget = ({
+  title,
+  slices
+}: DistributionWidgetProps) => {
   return (
     <ChartCard title={title}>
       <div className="h-48 sm:h-52">
@@ -54,5 +57,3 @@ function DistributionWidget({ title, slices }: DistributionWidgetProps): React.J
     </ChartCard>
   )
 }
-
-export default DistributionWidget

@@ -20,7 +20,7 @@ interface CategoryDropdownProps {
   onSelect: (value: string) => void
 }
 
-const CategoryPill = ({ option }: { option: CategoryOption }): React.JSX.Element => {
+const CategoryPill = ({ option }: { option: CategoryOption }) => {
   return (
     <span
       className={cn(
@@ -40,7 +40,7 @@ const CategoryDropdown = ({
   options,
   value,
   onSelect
-}: CategoryDropdownProps): React.JSX.Element => {
+}: CategoryDropdownProps) => {
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Focus the search box when the dropdown mounts (i.e. when it opens).
@@ -86,7 +86,7 @@ const CategoryDropdown = ({
   )
 }
 
-export const CategorySelect = ({ value, onChange }: CategorySelectProps): React.JSX.Element => {
+export const CategorySelect = ({ value, onChange }: CategorySelectProps) => {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const rootRef = useRef<HTMLDivElement>(null)

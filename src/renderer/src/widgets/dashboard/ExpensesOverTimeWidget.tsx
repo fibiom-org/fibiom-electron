@@ -9,7 +9,7 @@ import {
   YAxis
 } from 'recharts'
 import type { ExpensePoint } from '@renderer/entities/dashboard/model/types'
-import ChartCard from '@renderer/shared/ui/ChartCard'
+import { ChartCard } from '@renderer/shared/ui/ChartCard'
 import { CHART_COLORS } from '@renderer/shared/config/charts'
 import { formatCurrency } from '@renderer/shared/lib/format'
 
@@ -17,7 +17,9 @@ interface ExpensesOverTimeWidgetProps {
   points: ExpensePoint[]
 }
 
-function ExpensesOverTimeWidget({ points }: ExpensesOverTimeWidgetProps): React.JSX.Element {
+export const ExpensesOverTimeWidget = ({
+  points
+}: ExpensesOverTimeWidgetProps) => {
   return (
     <ChartCard title="Expenses over time">
       <div className="h-48 sm:h-52">
@@ -51,5 +53,3 @@ function ExpensesOverTimeWidget({ points }: ExpensesOverTimeWidgetProps): React.
     </ChartCard>
   )
 }
-
-export default ExpensesOverTimeWidget

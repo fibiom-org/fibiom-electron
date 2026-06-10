@@ -1,12 +1,14 @@
 import type { RunwayInfo } from '@renderer/entities/dashboard/model/types'
-import ChartCard from '@renderer/shared/ui/ChartCard'
+import { ChartCard } from '@renderer/shared/ui/ChartCard'
 import { formatCurrency } from '@renderer/shared/lib/format'
 
 interface RunwayCalculatorWidgetProps {
   runway: RunwayInfo
 }
 
-function RunwayCalculatorWidget({ runway }: RunwayCalculatorWidgetProps): React.JSX.Element {
+export const RunwayCalculatorWidget = ({
+  runway
+}: RunwayCalculatorWidgetProps) => {
   return (
     <ChartCard title="Runway calculator">
       <div className="space-y-4">
@@ -28,5 +30,3 @@ function RunwayCalculatorWidget({ runway }: RunwayCalculatorWidgetProps): React.
     </ChartCard>
   )
 }
-
-export default RunwayCalculatorWidget
