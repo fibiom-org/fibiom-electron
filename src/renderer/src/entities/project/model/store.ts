@@ -2,17 +2,22 @@ import {
   computeExpenseSlices,
   computeKpi,
   computeMonthlyTotals,
+  summarizeEmployeeChanges,
   summarizePaymentChanges
 } from './compute'
-import { SEED_PAYMENTS, SEED_PROJECTS } from './seed'
+import { SEED_EMPLOYEES, SEED_PAYMENTS, SEED_PROJECTS } from './seed'
 import type {
   CreateProjectInput,
   DashboardPeriod,
+  DeleteEmployeeInput,
   DeletePaymentInput,
+  Employee,
+  EmployeeInput,
   Payment,
   PaymentInput,
   Project,
   ProjectDashboardData,
+  UpdateEmployeeInput,
   UpdatePaymentInput
 } from './types'
 
@@ -21,13 +26,15 @@ type Listener = () => void
 interface ProjectStoreState {
   projects: Project[]
   payments: Payment[]
+  employees: Employee[]
 }
 
 const createId = (): string => crypto.randomUUID()
 
 let state: ProjectStoreState = {
   projects: [...SEED_PROJECTS],
-  payments: [...SEED_PAYMENTS]
+  payments: [...SEED_PAYMENTS],
+  employees: [...SEED_EMPLOYEES]
 }
 
 const listeners = new Set<Listener>()
@@ -53,6 +60,9 @@ export const getProject = (projectId: string): Project | undefined =>
 export const getProjectPayments = (projectId: string): Payment[] =>
   state.payments.filter((payment) => payment.projectId === projectId)
 
+export const getProjectEmployees = (projectId: string): Employee[] =>
+  state.employees.filter((employee) => employee.projectId === projectId)
+
 export const getProjectDashboard = (
   projectId: string,
   period: DashboardPeriod
@@ -61,12 +71,14 @@ export const getProjectDashboard = (
   if (!project) return null
 
   const payments = getProjectPayments(projectId)
+  const employees = getProjectEmployees(projectId)
 
   return {
-    kpi: computeKpi(project, payments, period),
-    expenseSlices: computeExpenseSlices(payments, period),
-    monthlyTotals: computeMonthlyTotals(payments, period),
-    payments
+    kpi: computeKpi(project, payments, employees, period),
+    expenseSlices: computeExpenseSlices(payments, employees, period),
+    monthlyTotals: computeMonthlyTotals(payments, employees, period),
+    payments,
+    employees
   }
 }
 
@@ -113,10 +125,7 @@ export const addPayment = (projectId: string, input: PaymentInput): Payment => {
   return payment
 }
 
-export const updatePayment = (
-  paymentId: string,
-  input: UpdatePaymentInput
-): Payment | null => {
+export const updatePayment = (paymentId: string, input: UpdatePaymentInput): Payment | null => {
   const index = state.payments.findIndex((payment) => payment.id === paymentId)
   if (index === -1) return null
 
@@ -151,10 +160,7 @@ export const updatePayment = (
   return updated
 }
 
-export const deletePayment = (
-  paymentId: string,
-  input: DeletePaymentInput
-): Payment | null => {
+export const deletePayment = (paymentId: string, input: DeletePaymentInput): Payment | null => {
   const index = state.payments.findIndex((payment) => payment.id === paymentId)
   if (index === -1) return null
 
@@ -176,6 +182,81 @@ export const deletePayment = (
   const payments = [...state.payments]
   payments[index] = updated
   state = { ...state, payments }
+  emit()
+  return updated
+}
+
+export const addEmployee = (projectId: string, input: EmployeeInput): Employee => {
+  const employee: Employee = {
+    id: createId(),
+    projectId,
+    name: input.name.trim(),
+    salary: input.salary,
+    deletedAt: null,
+    history: [],
+    createdAt: new Date().toISOString()
+  }
+
+  state = {
+    ...state,
+    employees: [...state.employees, employee]
+  }
+  emit()
+  return employee
+}
+
+export const updateEmployee = (employeeId: string, input: UpdateEmployeeInput): Employee | null => {
+  const index = state.employees.findIndex((employee) => employee.id === employeeId)
+  if (index === -1) return null
+
+  const before = state.employees[index]
+  const summary = summarizeEmployeeChanges(before, input)
+  if (!summary) return before
+
+  const updated: Employee = {
+    ...before,
+    name: input.name.trim(),
+    salary: input.salary,
+    history: [
+      {
+        id: createId(),
+        timestamp: new Date().toISOString(),
+        summary,
+        reason: input.reason.trim()
+      },
+      ...before.history
+    ]
+  }
+
+  const employees = [...state.employees]
+  employees[index] = updated
+  state = { ...state, employees }
+  emit()
+  return updated
+}
+
+export const deleteEmployee = (employeeId: string, input: DeleteEmployeeInput): Employee | null => {
+  const index = state.employees.findIndex((employee) => employee.id === employeeId)
+  if (index === -1) return null
+
+  const before = state.employees[index]
+  const updated: Employee = {
+    ...before,
+    deletedAt: new Date().toISOString(),
+    history: [
+      {
+        id: createId(),
+        timestamp: new Date().toISOString(),
+        summary: 'deleted',
+        reason: input.reason.trim()
+      },
+      ...before.history
+    ]
+  }
+
+  const employees = [...state.employees]
+  employees[index] = updated
+  state = { ...state, employees }
   emit()
   return updated
 }

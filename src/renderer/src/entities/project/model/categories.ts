@@ -1,3 +1,5 @@
+export const PAYROLL_CATEGORY = 'Payroll'
+
 export const EXPENSE_CATEGORIES = [
   'SaaS',
   'Infrastructure',
@@ -8,12 +10,7 @@ export const EXPENSE_CATEGORIES = [
   'Other'
 ] as const
 
-export const INCOME_CATEGORIES = [
-  'Subscriptions',
-  'Services',
-  'Investment',
-  'Other'
-] as const
+export const INCOME_CATEGORIES = ['Subscriptions', 'Services', 'Investment', 'Other'] as const
 
 export const CURRENCY_OPTIONS = [
   { value: 'USD', label: 'USD' },
@@ -21,6 +18,5 @@ export const CURRENCY_OPTIONS = [
   { value: 'GBP', label: 'GBP' }
 ] as const
 
-export const getCategoriesForDirection = (
-  direction: 'expense' | 'income'
-): readonly string[] => (direction === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES)
+export const getCategoriesForDirection = (direction: 'expense' | 'income'): readonly string[] =>
+  direction === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES
