@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { NavLink, useMatches } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import { useAuth } from '@renderer/features/auth/AuthContext'
 import { Button } from '@renderer/components/ui/Button'
 import { cn } from '@renderer/lib/cn'
@@ -14,16 +14,13 @@ const nav = [
   { label: 'Settings', icon: <Settings />, path: null }
 ]
 
-
-
-
 interface AppShellProps {
   children: ReactNode;
 }
 
 export const AppShell = ({ children }: AppShellProps) => {
   const { lock } = useAuth();
-  
+
 
   return (
     <div className="flex h-screen bg-zinc-950 text-zinc-100">
