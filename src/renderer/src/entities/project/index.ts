@@ -64,5 +64,7 @@ export {
   useProject,
   useProjectDashboard,
   useProjectPayments,
+  useProjectPlan,
+  useProjectPlanTargets,
   useProjects
 } from './model/useProjectStore'
