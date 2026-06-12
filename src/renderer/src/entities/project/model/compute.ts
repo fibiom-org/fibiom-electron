@@ -1,6 +1,8 @@
+import { PAYROLL_CATEGORY } from './categories'
 import type {
   CategorySlice,
   DashboardPeriod,
+  Employee,
   MonthlyTotals,
   Payment,
   PaymentInput,
@@ -31,11 +33,29 @@ export const getPaymentsInPeriod = (
       paymentAppliesInPeriod(p, period)
   )
 
+export const getActiveEmployees = (employees: Employee[]): Employee[] =>
+  employees.filter((employee) => !employee.deletedAt)
+
+export const getVendorExpensesInPeriod = (
+  payments: Payment[],
+  period: DashboardPeriod
+): Payment[] =>
+  getPaymentsInPeriod(payments, period, 'expense').filter(
+    (payment) => payment.category !== PAYROLL_CATEGORY
+  )
+
 const sumPayments = (payments: Payment[]): number =>
   payments.reduce((total, payment) => total + payment.amount, 0)
 
-export const computeBurn = (payments: Payment[], period: DashboardPeriod): number =>
-  sumPayments(getPaymentsInPeriod(payments, period, 'expense'))
+export const computePayroll = (employees: Employee[], _period: DashboardPeriod): number =>
+  getActiveEmployees(employees).reduce((total, employee) => total + employee.salary, 0)
+
+export const computeBurn = (
+  payments: Payment[],
+  employees: Employee[],
+  period: DashboardPeriod
+): number =>
+  sumPayments(getVendorExpensesInPeriod(payments, period)) + computePayroll(employees, period)
 
 export const computeRevenue = (payments: Payment[], period: DashboardPeriod): number =>
   sumPayments(getPaymentsInPeriod(payments, period, 'income'))
@@ -47,7 +67,19 @@ export const computeMrr = (payments: Payment[], period: DashboardPeriod): number
     )
   )
 
-const netFlowUpToPeriod = (payments: Payment[], period: DashboardPeriod): number => {
+const monthsActiveInPeriod = (createdAt: string, period: DashboardPeriod): number => {
+  const months =
+    (period.year - new Date(createdAt).getFullYear()) * 12 +
+    (period.month - (new Date(createdAt).getMonth() + 1)) +
+    1
+  return Math.max(months, 0)
+}
+
+const netFlowUpToPeriod = (
+  payments: Payment[],
+  employees: Employee[],
+  period: DashboardPeriod
+): number => {
   const cutoff = new Date(period.year, period.month, 0, 23, 59, 59)
   let net = 0
 
@@ -55,10 +87,7 @@ const netFlowUpToPeriod = (payments: Payment[], period: DashboardPeriod): number
     if (payment.deletedAt) continue
 
     if (payment.type === 'recurring') {
-      const months =
-        (period.year - new Date(payment.createdAt).getFullYear()) * 12 +
-        (period.month - (new Date(payment.createdAt).getMonth() + 1)) +
-        1
+      const months = monthsActiveInPeriod(payment.createdAt, period)
       if (months > 0) {
         const signed = payment.direction === 'income' ? payment.amount : -payment.amount
         net += signed * months
@@ -74,14 +103,20 @@ const netFlowUpToPeriod = (payments: Payment[], period: DashboardPeriod): number
     }
   }
 
+  for (const employee of getActiveEmployees(employees)) {
+    const months = monthsActiveInPeriod(employee.createdAt, period)
+    if (months > 0) net -= employee.salary * months
+  }
+
   return net
 }
 
 export const computeCash = (
   project: Project,
   payments: Payment[],
+  employees: Employee[],
   period: DashboardPeriod
-): number => project.initialCash + netFlowUpToPeriod(payments, period)
+): number => project.initialCash + netFlowUpToPeriod(payments, employees, period)
 
 export const computeRunway = (cash: number, burn: number): number | null => {
   if (burn <= 0) return null
@@ -91,10 +126,11 @@ export const computeRunway = (cash: number, burn: number): number | null => {
 export const computeKpi = (
   project: Project,
   payments: Payment[],
+  employees: Employee[],
   period: DashboardPeriod
 ): ProjectKpi => {
-  const burn = computeBurn(payments, period)
-  const cash = computeCash(project, payments, period)
+  const burn = computeBurn(payments, employees, period)
+  const cash = computeCash(project, payments, employees, period)
 
   return {
     burn,
@@ -107,12 +143,18 @@ export const computeKpi = (
 
 export const computeExpenseSlices = (
   payments: Payment[],
+  employees: Employee[],
   period: DashboardPeriod
 ): CategorySlice[] => {
   const totals = new Map<string, number>()
 
-  for (const payment of getPaymentsInPeriod(payments, period, 'expense')) {
+  for (const payment of getVendorExpensesInPeriod(payments, period)) {
     totals.set(payment.category, (totals.get(payment.category) ?? 0) + payment.amount)
+  }
+
+  const payroll = computePayroll(employees, period)
+  if (payroll > 0) {
+    totals.set(PAYROLL_CATEGORY, payroll)
   }
 
   return [...totals.entries()]
@@ -138,6 +180,7 @@ const shiftPeriod = (period: DashboardPeriod, offset: number): DashboardPeriod =
 
 export const computeMonthlyTotals = (
   payments: Payment[],
+  employees: Employee[],
   anchor: DashboardPeriod,
   count = 6
 ): MonthlyTotals[] => {
@@ -148,7 +191,7 @@ export const computeMonthlyTotals = (
 
   return months.map((period) => ({
     period: `${period.month}/${period.year}`,
-    expenses: computeBurn(payments, period),
+    expenses: computeBurn(payments, employees, period),
     income: computeRevenue(payments, period)
   }))
 }
@@ -179,6 +222,22 @@ export const summarizePaymentChanges = (before: Payment, after: PaymentInput): s
         `${label}: ${formatPaymentField(oldValue as string | number | null)} → ${formatPaymentField(newValue)}`
       )
     }
+  }
+
+  return changes.length > 0 ? changes.join(', ') : null
+}
+
+export const summarizeEmployeeChanges = (
+  before: Employee,
+  after: { name: string; salary: number }
+): string | null => {
+  const changes: string[] = []
+
+  if (before.name !== after.name.trim()) {
+    changes.push(`name: ${before.name} → ${after.name.trim()}`)
+  }
+  if (before.salary !== after.salary) {
+    changes.push(`salary: ${before.salary} → ${after.salary}`)
   }
 
   return changes.length > 0 ? changes.join(', ') : null

@@ -1,4 +1,4 @@
-import type { Payment, Project } from './types'
+import type { Employee, Payment, Project } from './types'
 
 const now = (): string => new Date().toISOString()
 
@@ -126,5 +126,62 @@ export const SEED_PAYMENTS: Payment[] = [
     deletedAt: null,
     history: [],
     createdAt: '2026-03-01T00:00:00.000Z'
+  }
+]
+
+export const SEED_EMPLOYEES: Employee[] = [
+  {
+    id: 'emp-alice-acme',
+    projectId: 'proj-acme',
+    name: 'Alice',
+    salary: 8000,
+    deletedAt: null,
+    history: [],
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'emp-bob-acme',
+    projectId: 'proj-acme',
+    name: 'Bob',
+    salary: 5000,
+    deletedAt: null,
+    history: [],
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'emp-carol-acme',
+    projectId: 'proj-acme',
+    name: 'Carol',
+    salary: 3500,
+    deletedAt: null,
+    history: [],
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'emp-dana-stream',
+    projectId: 'proj-streampay',
+    name: 'Dana',
+    salary: 10_000,
+    deletedAt: null,
+    history: [],
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'emp-evan-stream',
+    projectId: 'proj-streampay',
+    name: 'Evan',
+    salary: 6000,
+    deletedAt: null,
+    history: [],
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'emp-faye-stream',
+    projectId: 'proj-streampay',
+    name: 'Faye',
+    salary: 4500,
+    deletedAt: null,
+    history: [],
+    createdAt: '2026-01-01T00:00:00.000Z'
   }
 ]

@@ -3,6 +3,7 @@ import {
   computeBurn,
   computeCash,
   computeRunway,
+  useProjectEmployees,
   useProjectPayments,
   type Project
 } from '@renderer/entities/project'
@@ -16,8 +17,9 @@ interface ProjectCardProps {
 
 export const ProjectCard = ({ project, period }: ProjectCardProps) => {
   const payments = useProjectPayments(project.id)
-  const burn = computeBurn(payments, period)
-  const cash = computeCash(project, payments, period)
+  const employees = useProjectEmployees(project.id)
+  const burn = computeBurn(payments, employees, period)
+  const cash = computeCash(project, payments, employees, period)
   const runway = computeRunway(cash, burn)
 
   return (

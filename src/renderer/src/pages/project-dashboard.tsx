@@ -1,14 +1,19 @@
 import { useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import {
+  addEmployee,
   addPayment,
+  deleteEmployee,
   deletePayment,
+  getActiveEmployees,
+  updateEmployee,
   updatePayment,
   useProject,
   useProjectDashboard
 } from '@renderer/entities/project'
-import type { Payment, PaymentDirection } from '@renderer/entities/project'
+import type { Employee, Payment, PaymentDirection } from '@renderer/entities/project'
 import { useDashboardPeriod } from '@renderer/features/dashboard-period/model/useDashboardPeriod'
+import { DeleteEmployeeModal, EmployeeForm } from '@renderer/features/manage-employee'
 import { DeletePaymentModal, PaymentForm } from '@renderer/features/manage-payment'
 import { Modal } from '@renderer/shared/ui/Modal'
 import { ExpenseStructureWidget } from '@renderer/widgets/project/ExpenseStructureWidget'
@@ -22,6 +27,8 @@ type PaymentModalState =
   | { mode: 'edit'; payment: Payment }
   | null
 
+type EmployeeModalState = { mode: 'add' } | { mode: 'edit'; employee: Employee } | null
+
 export const ProjectDashboardPage = () => {
   const { projectId } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
@@ -29,7 +36,9 @@ export const ProjectDashboardPage = () => {
   const project = useProject(projectId)
   const data = useProjectDashboard(projectId, period)
   const [paymentModal, setPaymentModal] = useState<PaymentModalState>(null)
-  const [deleteTarget, setDeleteTarget] = useState<Payment | null>(null)
+  const [employeeModal, setEmployeeModal] = useState<EmployeeModalState>(null)
+  const [deletePaymentTarget, setDeletePaymentTarget] = useState<Payment | null>(null)
+  const [deleteEmployeeTarget, setDeleteEmployeeTarget] = useState<Employee | null>(null)
 
   if (!projectId) {
     return <Navigate to="/projects" replace />
@@ -39,7 +48,9 @@ export const ProjectDashboardPage = () => {
     return <Navigate to="/projects" replace />
   }
 
-  const isEmpty = data.payments.filter((payment) => !payment.deletedAt).length === 0
+  const hasActivePayments = data.payments.some((payment) => !payment.deletedAt)
+  const hasActiveEmployees = getActiveEmployees(data.employees).length > 0
+  const isEmpty = !hasActivePayments && !hasActiveEmployees
 
   const handleProjectChange = (id: string): void => {
     navigate(`/projects/${id}`, { replace: true })
@@ -61,7 +72,9 @@ export const ProjectDashboardPage = () => {
       {isEmpty ? (
         <div className="rounded-2xl border border-dashed border-zinc-800 px-6 py-16 text-center">
           <p className="text-sm text-zinc-400">No payments yet.</p>
-          <p className="mt-1 text-sm text-zinc-500">Add your first expense or income.</p>
+          <p className="mt-1 text-sm text-zinc-500">
+            Add vendors in Expenses or employees under Payroll.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -72,11 +85,15 @@ export const ProjectDashboardPage = () => {
 
       <PaymentsTable
         payments={data.payments}
+        employees={data.employees}
         period={period}
         currency={project.currency}
         onEdit={(payment) => setPaymentModal({ mode: 'edit', payment })}
-        onDelete={setDeleteTarget}
+        onDelete={setDeletePaymentTarget}
         onAdd={(direction) => setPaymentModal({ mode: 'add', direction })}
+        onEditEmployee={(employee) => setEmployeeModal({ mode: 'edit', employee })}
+        onDeleteEmployee={setDeleteEmployeeTarget}
+        onAddEmployee={() => setEmployeeModal({ mode: 'add' })}
       />
 
       <Modal
@@ -114,15 +131,54 @@ export const ProjectDashboardPage = () => {
         )}
       </Modal>
 
+      <Modal
+        open={employeeModal !== null}
+        onClose={() => setEmployeeModal(null)}
+        title={employeeModal?.mode === 'edit' ? 'Edit employee' : 'Add employee'}
+      >
+        {employeeModal && (
+          <EmployeeForm
+            employee={employeeModal.mode === 'edit' ? employeeModal.employee : undefined}
+            requireReason={employeeModal.mode === 'edit'}
+            submitLabel={employeeModal.mode === 'edit' ? 'Save changes' : 'Add employee'}
+            onCancel={() => setEmployeeModal(null)}
+            onSubmit={(values) => {
+              if (employeeModal.mode === 'edit') {
+                updateEmployee(employeeModal.employee.id, {
+                  name: values.name,
+                  salary: values.salary,
+                  reason: values.reason ?? ''
+                })
+              } else {
+                addEmployee(projectId, { name: values.name, salary: values.salary })
+              }
+              setEmployeeModal(null)
+            }}
+          />
+        )}
+      </Modal>
+
       <DeletePaymentModal
-        payment={deleteTarget}
+        payment={deletePaymentTarget}
         currency={project.currency}
-        onClose={() => setDeleteTarget(null)}
+        onClose={() => setDeletePaymentTarget(null)}
         onConfirm={(reason) => {
-          if (deleteTarget) {
-            deletePayment(deleteTarget.id, { reason })
+          if (deletePaymentTarget) {
+            deletePayment(deletePaymentTarget.id, { reason })
           }
-          setDeleteTarget(null)
+          setDeletePaymentTarget(null)
+        }}
+      />
+
+      <DeleteEmployeeModal
+        employee={deleteEmployeeTarget}
+        currency={project.currency}
+        onClose={() => setDeleteEmployeeTarget(null)}
+        onConfirm={(reason) => {
+          if (deleteEmployeeTarget) {
+            deleteEmployee(deleteEmployeeTarget.id, { reason })
+          }
+          setDeleteEmployeeTarget(null)
         }}
       />
     </div>
