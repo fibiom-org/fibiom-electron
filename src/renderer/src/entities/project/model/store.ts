@@ -5,6 +5,11 @@ import {
   summarizeEmployeeChanges,
   summarizePaymentChanges
 } from './compute'
+import { computeProjectPlan } from './plan-compute'
+import { normalizePlanPeriod, planPeriodStorageKey } from './plan-period'
+import type { PlanPeriod } from './plan-period'
+import { SEED_PLAN_TARGETS } from './plan-seed'
+import type { PlanTarget, PlanTargetInput, ProjectPlanData } from './plan-types'
 import { SEED_EMPLOYEES, SEED_PAYMENTS, SEED_PROJECTS } from './seed'
 import type {
   CreateProjectInput,
@@ -27,6 +32,7 @@ interface ProjectStoreState {
   projects: Project[]
   payments: Payment[]
   employees: Employee[]
+  planTargets: PlanTarget[]
 }
 
 const createId = (): string => crypto.randomUUID()
@@ -34,7 +40,8 @@ const createId = (): string => crypto.randomUUID()
 let state: ProjectStoreState = {
   projects: [...SEED_PROJECTS],
   payments: [...SEED_PAYMENTS],
-  employees: [...SEED_EMPLOYEES]
+  employees: [...SEED_EMPLOYEES],
+  planTargets: [...SEED_PLAN_TARGETS]
 }
 
 const listeners = new Set<Listener>()
@@ -62,6 +69,60 @@ export const getProjectPayments = (projectId: string): Payment[] =>
 
 export const getProjectEmployees = (projectId: string): Employee[] =>
   state.employees.filter((employee) => employee.projectId === projectId)
+
+export const getProjectPlanTargets = (projectId: string, period: PlanPeriod): PlanTarget[] => {
+  const key = planPeriodStorageKey(period)
+  return state.planTargets.filter(
+    (target) =>
+      target.projectId === projectId && planPeriodStorageKey(target.period) === key
+  )
+}
+
+export const saveProjectPlanTargets = (
+  projectId: string,
+  period: PlanPeriod,
+  inputs: PlanTargetInput[]
+): void => {
+  const normalized = normalizePlanPeriod(period)
+  const key = planPeriodStorageKey(normalized)
+  const timestamp = new Date().toISOString()
+
+  const rest = state.planTargets.filter(
+    (target) =>
+      !(target.projectId === projectId && planPeriodStorageKey(target.period) === key)
+  )
+
+  const next = inputs.map((input) => ({
+    id: createId(),
+    projectId,
+    metric: input.metric,
+    targetValue: input.targetValue,
+    operator: input.operator,
+    period: normalized,
+    createdAt: timestamp,
+    updatedAt: timestamp
+  }))
+
+  state = {
+    ...state,
+    planTargets: [...rest, ...next]
+  }
+  emit()
+}
+
+export const getProjectPlan = (
+  projectId: string,
+  period: PlanPeriod
+): ProjectPlanData | null => {
+  const project = getProject(projectId)
+  if (!project) return null
+
+  const payments = getProjectPayments(projectId)
+  const employees = getProjectEmployees(projectId)
+  const targets = getProjectPlanTargets(projectId, period)
+
+  return computeProjectPlan(project, payments, employees, period, targets)
+}
 
 export const getProjectDashboard = (
   projectId: string,

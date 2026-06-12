@@ -53,7 +53,7 @@ export const ProjectDashboardPage = () => {
   const isEmpty = !hasActivePayments && !hasActiveEmployees
 
   const handleProjectChange = (id: string): void => {
-    navigate(`/projects/${id}`)
+    navigate(`/projects/${id}`, { replace: true })
   }
 
   return (

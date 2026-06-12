@@ -1,6 +1,9 @@
 import { useSyncExternalStore } from 'react'
 import { computeExpenseSlices, computeKpi, computeMonthlyTotals } from './compute'
-import { getSnapshot, subscribe } from './store'
+import { computeProjectPlan } from './plan-compute'
+import type { PlanPeriod } from './plan-period'
+import type { ProjectPlanData } from './plan-types'
+import { getProjectPlanTargets, getSnapshot, subscribe } from './store'
 import type { DashboardPeriod, Employee, Payment, Project, ProjectDashboardData } from './types'
 
 export const useProjects = (): Project[] => {
@@ -46,4 +49,27 @@ export const useProjectDashboard = (
     payments: projectPayments,
     employees: projectEmployees
   }
+}
+
+export const useProjectPlan = (
+  projectId: string | undefined,
+  period: PlanPeriod
+): ProjectPlanData | null => {
+  const state = useSyncExternalStore(subscribe, getSnapshot)
+  if (!projectId) return null
+
+  const project = state.projects.find((item) => item.id === projectId)
+  if (!project) return null
+
+  const projectPayments = state.payments.filter((payment) => payment.projectId === projectId)
+  const projectEmployees = state.employees.filter((employee) => employee.projectId === projectId)
+  const targets = getProjectPlanTargets(projectId, period)
+
+  return computeProjectPlan(project, projectPayments, projectEmployees, period, targets)
+}
+
+export const useProjectPlanTargets = (projectId: string | undefined, period: PlanPeriod) => {
+  useSyncExternalStore(subscribe, getSnapshot)
+  if (!projectId) return []
+  return getProjectPlanTargets(projectId, period)
 }
