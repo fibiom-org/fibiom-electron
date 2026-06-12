@@ -155,3 +155,9 @@ never touches the DB or QVAC directly — it goes through IPC.
 - On-device inference only — no network calls for AI.
 - Financial data is encrypted at rest with a key derived from your master key.
 - Receipt images are read on-device and never uploaded.
+
+---
+
+## License
+
+Licensed under the **Apache License 2.0** — see [LICENSE](LICENSE).
