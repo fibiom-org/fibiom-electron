@@ -19,13 +19,6 @@ interface DbAPI {
   exec: (sql: string, params?: unknown[]) => Promise<void>
 }
 
-interface QvacAPI {
-  loadModel: () => Promise<string>
-  infer: (history: { role: string; content: string }[]) => Promise<void>
-  onCompletionStream: (cb: (token: string) => void) => void
-  unloadModel: () => Promise<string>
-}
-
 interface VisionParseResult {
   text: string
   stats?: unknown
@@ -56,6 +49,7 @@ interface LlmAPI {
   infer: (chatId: number) => Promise<string>
   onStream: (cb: (token: string) => void) => () => void
   onProgress: (cb: (percentage: number | null) => void) => () => void
+  onTool: (cb: (tool: { name: string; arguments: unknown }) => void) => () => void
   unload: () => Promise<void>
 }
 
@@ -119,18 +113,41 @@ interface ModelsAPI {
   onProgress: (cb: (percentage: number | null) => void) => () => void
 }
 
+interface SpeechAPI {
+  transcribe: (pcm: Uint8Array) => Promise<string>
+  speak: (text: string) => Promise<Uint8Array>
+  onProgress: (cb: (percentage: number | null) => void) => () => void
+  unload: () => Promise<void>
+}
+
+interface DocumentRow {
+  id: number
+  project_id: number
+  filename: string
+  char_count: number
+  chunk_count: number
+  created_at: string
+}
+
+interface DocumentsAPI {
+  list: (projectId?: number) => Promise<DocumentRow[]>
+  add: (filename: string, text: string, projectId?: number) => Promise<DocumentRow>
+  delete: (documentId: number, projectId?: number) => Promise<void>
+}
+
 declare global {
   interface Window {
     electron: ElectronAPI
     api: unknown
     authAPI: AuthAPI
     dbAPI: DbAPI
-    qvacAPI: QvacAPI
     visionAPI: VisionAPI
+    speechAPI: SpeechAPI
     llmAPI: LlmAPI
     chatAPI: ChatAPI
     settingsAPI: SettingsAPI
     modelsAPI: ModelsAPI
+    documentsAPI: DocumentsAPI
   }
 }
 

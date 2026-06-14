@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-An Electron + React 19 + TypeScript desktop app scaffolded from the `electron-vite` React template. Development trajectory: see [`docs/roadmap.md`](docs/roadmap.md). It has a routed UI (auth gate → dashboard) and a pluggable database layer. The longer-term feature is a local LLM chat that runs a model **on-device** through Tether's QVAC SDK (`@qvac/sdk`) — no remote inference; that chat UI lives in `src/renderer/src/App.tsx` but is currently unused (see QVAC note below).
+An Electron + React 19 + TypeScript desktop app — a local-first AI CFO finance app. Development trajectory: see [`docs/roadmap.md`](docs/roadmap.md). It has a routed UI (auth gate → dashboard / projects / chats / settings) backed by an **encrypted SQLite store** (SQLCipher, unlocked with a master key). The core feature is an on-device LLM chat that runs a model through Tether's QVAC SDK (`@qvac/sdk`) — **no remote inference** — plus receipt vision parsing, voice (STT/TTS), and RAG, all on-device. The chat is wired and live (`src/main/llm.ts` + `features/ai-chat/`).
 
 ## Commands
 
@@ -36,7 +36,7 @@ React component conventions (arrow functions, named exports, props naming): see 
 Three-process Electron split, each with its own tsconfig:
 
 - **Main** — `src/main/` (built to `out/main/index.js`, the app's `main` entry). Creates the `BrowserWindow`, opens external links via the system browser, registers IPC.
-- **Preload** — `src/preload/` (`contextIsolation` on). Bridges the renderer to main via `contextBridge`, exposing `window.electron`, `window.api`, and `window.qvacAPI` (`loadModel` / `infer` / `onCompletionStream` / `unloadModel`).
+- **Preload** — `src/preload/` (`contextIsolation` on). Bridges the renderer to main via `contextBridge`, exposing `window.electron`, `window.api`, `authAPI`, `dbAPI`, `chatAPI`, `llmAPI`, `visionAPI`, `speechAPI`, `modelsAPI`, and `settingsAPI`.
 - **Renderer** — `src/renderer/` (React + Tailwind v4). Entry is `src/renderer/index.html` → `/src/main.tsx`. Alias `@renderer` → `src/renderer/src`.
 
 Tailwind v4 is wired through the `@tailwindcss/vite` plugin (see `electron.vite.config.ts`), not a `tailwind.config` file.
@@ -44,23 +44,25 @@ Tailwind v4 is wired through the `@tailwindcss/vite` plugin (see `electron.vite.
 ### Renderer layout (`src/renderer/src/`)
 
 - `main.tsx` — entry: `createRoot` → `AuthProvider` → `RouterProvider`. (Distinct from `pages/main.tsx`.)
-- `lib/router.tsx` — route table via `createHashRouter`. **HashRouter is required** because the production build loads from `file://`. Routes: `/auth` and `/reset` (public) and `/`, `/projects`, `/projects/:projectId`, `/chats`, `/chats/:chatId` (behind `ProtectedRoute`).
-- `pages/` — route components: `auth.tsx` (master-key setup/unlock), `main.tsx` (dashboard).
+- `lib/router.tsx` — route table via `createHashRouter`. **HashRouter is required** because the production build loads from `file://`. Routes: `/auth` and `/reset` (public) and `/`, `/projects`, `/projects/:projectId`, `/projects/:projectId/plan`, `/chats`, `/chats/:chatId`, `/settings` (behind `ProtectedRoute`).
+- `pages/` — route components: `auth.tsx` (master-key setup/unlock), `main.tsx` (dashboard), `projects.tsx`, `project-dashboard.tsx`, `project-plan.tsx`, `chats.tsx`, `settings.tsx`.
 - `features/auth/` — `AuthContext` + `ProtectedRoute` guard. **Not a mock** — it drives the real secure-store via `window.authAPI` (`status` / `setup` / `unlock` / `lock` / `reset`, IPC `auth:*` → `src/main/secure-store.ts`). Session state is `{ initialized, unlocked }` read from `authAPI.status()`; the master key unlocks the encrypted SQLite DB in the main process and never touches localStorage. `ProtectedRoute` renders the app only when `unlocked`.
 - `components/ui/` (Button, Input, Card) and `components/layout/AppShell` (sidebar + topbar shell). `lib/cn.ts` is the className joiner.
-- `App.tsx` — the legacy QVAC chat, not mounted by any route.
 
-### Database layer (`src/main/db/`, main process)
+### Database layer (`src/main/secure-store.ts`, main process)
 
-The renderer never touches the DB directly — it calls `window.dbAPI` (preload) which invokes the `db:status` / `db:query` IPC channels registered in `src/main/index.ts`.
+The renderer never touches the DB directly — it calls `window.dbAPI` (preload) which invokes the `db:status` / `db:query` / `db:exec` IPC channels registered in `src/main/index.ts`. Those channels delegate to `secure-store.ts`.
 
-`getDb()` returns a singleton selected by `loadDbConfig()`: defaults to **local SQLite** (`db/app.sqlite` in dev, userData when packaged), or **external Postgres** when `DB_DRIVER=postgres` + `DATABASE_URL` are set. Both drivers (`drivers/sqlite.ts`, `drivers/postgres.ts`) are **stubs** implementing the `Database` interface in `types.ts` — `connect`/`status` work, but `query`/`exec` throw until a real driver (`better-sqlite3` / `pg`) is installed and wired.
+`secure-store.ts` is a **master-key-secured encrypted SQLite store** using `better-sqlite3-multiple-ciphers` (SQLCipher). The 256-bit encryption key is derived from the user's master key with **Argon2id** + a per-database salt; the connection is held in-process and the key never leaves it. There is **no recovery path** (lost master key = lost data). The store auto-seeds a demo user/project/accounts/categories on first unlock (`schema.ts`). RAG vectors live in the same DB (`rag_chunks`).
 
-## QVAC integration: relocated but not yet wired
+> The old pluggable `src/main/db/` driver abstraction (`getDb`/`loadDbConfig` + SQLite/Postgres stubs) has been **removed** — `secure-store.ts` is the only DB path. There is no external-Postgres option.
 
-The on-device LLM feature does not run yet:
+## QVAC integration (wired and live)
 
-1. The QVAC main-process handlers (`load-model` / `infer` / `unload-model`) live in **`src/main/qvac.ts`** as `registerQvacHandlers(win)` — relocated from where they were originally mis-placed (the renderer entry). They are **not called** from `src/main/index.ts`, and the `@qvac/sdk` import + SDK calls are commented out.
-2. **`@qvac/sdk` is not installed** (absent from `package.json` / `node_modules`).
+All AI inference runs **on-device** through `@qvac/sdk` (installed; see `package.json`). The handlers are registered from `app.whenReady()` in `src/main/index.ts`:
 
-The IPC streaming contract (preserved in `qvac.ts` + preload `qvacAPI` + `App.tsx`): renderer calls `infer(history)`; main runs QVAC `completion({ stream: true })` and pushes each token over the `completion-stream` channel, then a final empty-string `''` sentinel to signal "done." To enable: `yarn add @qvac/sdk`, uncomment in `qvac.ts`, and call `registerQvacHandlers` from `app.whenReady()`.
+- **Chat** (`llm.ts`, `llm:*`) — `completion({ stream, tools })` with a multi-step tool-calling agent loop (`financial-tools.ts`), grounded by `financial-context.ts` + RAG (`rag.ts`). Streams tokens over `llm:stream`, then a final empty-string `''` sentinel.
+- **Vision** (`vision.ts`, `vision:*`) — `completion` with an image attachment for receipt parsing.
+- **Speech** (`speech.ts`, `speech:*`) — Whisper STT (`transcribe`) + Supertonic TTS (`textToSpeech`).
+- **Embeddings / RAG** (`embeddings.ts`, `rag.ts`) — `embed` (EmbeddingGemma 300M) + cosine search.
+- **Model lifecycle** (`model.ts`, `model-registry.ts`, `model-handlers.ts`, `models:*`) — one selectable multimodal model (Qwen3-VL 2B / SmolVLM2 500M / Gemma 4B) is **shared by chat and vision**; voice and embeddings use their own dedicated models. Settings → Models surfaces this via the capability map (`features/settings/ui/ModelCapabilities.tsx`).

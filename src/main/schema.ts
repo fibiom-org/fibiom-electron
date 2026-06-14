@@ -191,13 +191,47 @@ const V3 = `
   );
 `
 
+const V4 = `
+  -- QVAC RAG store: one row per embedded source record (transaction, receipt,
+  -- goal …). 'embedding' is a JSON float array produced on-device by the QVAC
+  -- embeddings model; semantic retrieval is a cosine scan over these vectors.
+  CREATE TABLE IF NOT EXISTS rag_chunks (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id  INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    source_type TEXT NOT NULL,
+    source_id   INTEGER NOT NULL,
+    content     TEXT NOT NULL,
+    embedding   TEXT NOT NULL,
+    updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (project_id, source_type, source_id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_rag_chunks_project ON rag_chunks(project_id);
+`
+
+const V5 = `
+  -- Uploaded reference documents (e.g. PDFs). The extracted text is split into
+  -- chunks and embedded into rag_chunks with source_type = 'doc:<id>', so the
+  -- existing semantic retrieval and the chat surface them automatically.
+  CREATE TABLE IF NOT EXISTS documents (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id  INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    filename    TEXT NOT NULL,
+    char_count  INTEGER NOT NULL DEFAULT 0,
+    chunk_count INTEGER NOT NULL DEFAULT 0,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_documents_project ON documents(project_id);
+`
+
 const migrations: ((db: Database.Database) => void)[] = [
   (db) => db.exec(V1),
   (db) => {
     db.exec(V2)
     migrateAiChatsToConversations(db)
   },
-  (db) => db.exec(V3)
+  (db) => db.exec(V3),
+  (db) => db.exec(V4),
+  (db) => db.exec(V5)
 ]
 
 export const runMigrations = (db: Database.Database): void => {

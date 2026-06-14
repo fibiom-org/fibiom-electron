@@ -15,6 +15,7 @@ import type { Employee, Payment, PaymentDirection } from '@renderer/entities/pro
 import { useDashboardPeriod } from '@renderer/features/dashboard-period/model/useDashboardPeriod'
 import { DeleteEmployeeModal, EmployeeForm } from '@renderer/features/manage-employee'
 import { DeletePaymentModal, PaymentForm } from '@renderer/features/manage-payment'
+import { InvoiceImportModal } from '@renderer/features/parse-invoice'
 import { Modal } from '@renderer/shared/ui/Modal'
 import { ExpenseStructureWidget } from '@renderer/widgets/project/ExpenseStructureWidget'
 import { IncomeExpenseBarWidget } from '@renderer/widgets/project/IncomeExpenseBarWidget'
@@ -39,6 +40,7 @@ export const ProjectDashboardPage = () => {
   const [employeeModal, setEmployeeModal] = useState<EmployeeModalState>(null)
   const [deletePaymentTarget, setDeletePaymentTarget] = useState<Payment | null>(null)
   const [deleteEmployeeTarget, setDeleteEmployeeTarget] = useState<Employee | null>(null)
+  const [invoiceOpen, setInvoiceOpen] = useState(false)
 
   if (!projectId) {
     return <Navigate to="/projects" replace />
@@ -64,6 +66,7 @@ export const ProjectDashboardPage = () => {
         year={period.year}
         onMonthChange={period.setFromInput}
         onAddPayment={() => setPaymentModal({ mode: 'add', direction: 'expense' })}
+        onScanInvoice={() => setInvoiceOpen(true)}
         onProjectChange={handleProjectChange}
       />
 
@@ -157,6 +160,12 @@ export const ProjectDashboardPage = () => {
           />
         )}
       </Modal>
+
+      <InvoiceImportModal
+        open={invoiceOpen}
+        projectId={projectId}
+        onClose={() => setInvoiceOpen(false)}
+      />
 
       <DeletePaymentModal
         payment={deletePaymentTarget}

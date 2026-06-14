@@ -1,9 +1,11 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { chatDisplayTitle } from '@renderer/entities/chat/model/types'
 import { useChat } from '@renderer/features/ai-chat'
+import { DocumentsPanel } from '@renderer/features/documents'
 import { Button } from '@renderer/components/ui/Button'
 import { cn } from '@renderer/lib/cn'
+import { Modal } from '@renderer/shared/ui/Modal'
 import { ChatComposer } from '@renderer/widgets/chat/ChatComposer'
 import { ChatMessageList } from '@renderer/widgets/chat/ChatMessageList'
 
@@ -48,6 +50,8 @@ export const ChatsPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parsedChatId])
 
+  const [docsOpen, setDocsOpen] = useState(false)
+
   const onSelectChat = (chatId: number): void => {
     navigate(`/chats/${chatId}`)
     void selectChat(chatId)
@@ -80,9 +84,14 @@ export const ChatsPage = () => {
         <aside className="flex w-72 shrink-0 flex-col border-r border-zinc-800 bg-zinc-900/20">
           <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-4">
             <p className="text-sm font-medium text-zinc-300">Conversations</p>
-            <Button variant="ghost" onClick={() => void onCreateChat()}>
-              New
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" onClick={() => setDocsOpen(true)}>
+                Docs
+              </Button>
+              <Button variant="ghost" onClick={() => void onCreateChat()}>
+                New
+              </Button>
+            </div>
           </div>
           <div className="flex-1 overflow-y-auto p-2">
             {chats.length === 0 ? (
@@ -143,6 +152,10 @@ export const ChatsPage = () => {
           )}
         </section>
       </div>
+
+      <Modal open={docsOpen} onClose={() => setDocsOpen(false)} title="Documents">
+        <DocumentsPanel />
+      </Modal>
     </div>
   )
 }
