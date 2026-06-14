@@ -1,4 +1,4 @@
-schema_version: 1
+reschema_version: 1
 application: fidiom-electron
 summary: >-
   Local-first desktop finance app. No remote AI inference. The only remote

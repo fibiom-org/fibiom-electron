@@ -12,6 +12,7 @@ interface ProjectDashboardToolbarProps {
   year: number
   onMonthChange: (value: string) => void
   onAddPayment: () => void
+  onScanInvoice: () => void
   onProjectChange: (projectId: string) => void
 }
 
@@ -21,6 +22,7 @@ export const ProjectDashboardToolbar = ({
   year,
   onMonthChange,
   onAddPayment,
+  onScanInvoice,
   onProjectChange
 }: ProjectDashboardToolbarProps) => {
   const projects = useProjects()
@@ -50,7 +52,12 @@ export const ProjectDashboardToolbar = ({
             All projects
           </Link>
         </div>
-        <Button onClick={onAddPayment}>+ Payment</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onScanInvoice}>
+            Scan invoice
+          </Button>
+          <Button onClick={onAddPayment}>+ Payment</Button>
+        </div>
       </div>
       <ProjectNav projectId={project.id} />
     </div>

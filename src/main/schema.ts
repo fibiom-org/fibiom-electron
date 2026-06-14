@@ -208,6 +208,21 @@ const V4 = `
   CREATE INDEX IF NOT EXISTS idx_rag_chunks_project ON rag_chunks(project_id);
 `
 
+const V5 = `
+  -- Uploaded reference documents (e.g. PDFs). The extracted text is split into
+  -- chunks and embedded into rag_chunks with source_type = 'doc:<id>', so the
+  -- existing semantic retrieval and the chat surface them automatically.
+  CREATE TABLE IF NOT EXISTS documents (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id  INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    filename    TEXT NOT NULL,
+    char_count  INTEGER NOT NULL DEFAULT 0,
+    chunk_count INTEGER NOT NULL DEFAULT 0,
+    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE INDEX IF NOT EXISTS idx_documents_project ON documents(project_id);
+`
+
 const migrations: ((db: Database.Database) => void)[] = [
   (db) => db.exec(V1),
   (db) => {
@@ -215,7 +230,8 @@ const migrations: ((db: Database.Database) => void)[] = [
     migrateAiChatsToConversations(db)
   },
   (db) => db.exec(V3),
-  (db) => db.exec(V4)
+  (db) => db.exec(V4),
+  (db) => db.exec(V5)
 ]
 
 export const runMigrations = (db: Database.Database): void => {

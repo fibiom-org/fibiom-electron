@@ -9,17 +9,19 @@ import { registerChatHandlers } from './chat-handlers'
 import { registerLlmHandlers } from './llm'
 import { registerModelHandlers } from './model-handlers'
 import { registerSettingsHandlers } from './settings-handlers'
+import { registerDocumentHandlers } from './document-handlers'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    width: 1024,
+    height: 720,
+    icon,
     show: false,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      autoplayPolicy: 'no-user-gesture-required'
     }
   })
 
@@ -60,6 +62,7 @@ app.whenReady().then(() => {
   registerLlmHandlers()
   registerModelHandlers()
   registerSettingsHandlers()
+  registerDocumentHandlers()
 
   createWindow()
 

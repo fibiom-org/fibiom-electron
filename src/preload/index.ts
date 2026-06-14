@@ -30,16 +30,6 @@ if (process.contextIsolated) {
         ipcRenderer.invoke('db:exec', sql, params)
     })
 
-    contextBridge.exposeInMainWorld('qvacAPI', {
-      loadModel: (): Promise<string> => ipcRenderer.invoke('load-model'),
-      infer: (history: { role: string; content: string }[]): Promise<void> =>
-        ipcRenderer.invoke('infer', history),
-      onCompletionStream: (cb: (token: string) => void): void => {
-        ipcRenderer.on('completion-stream', (_event, token) => cb(token))
-      },
-      unloadModel: (): Promise<string> => ipcRenderer.invoke('unload-model')
-    })
-
     contextBridge.exposeInMainWorld('visionAPI', {
       status: (): Promise<{ ready: boolean; loaded: boolean }> =>
         ipcRenderer.invoke('vision:status'),
@@ -117,6 +107,14 @@ if (process.contextIsolated) {
       get: (key: string): Promise<string | null> => ipcRenderer.invoke('settings:get', key),
       set: (key: string, value: string): Promise<void> =>
         ipcRenderer.invoke('settings:set', key, value)
+    })
+
+    contextBridge.exposeInMainWorld('documentsAPI', {
+      list: (projectId?: number) => ipcRenderer.invoke('documents:list', projectId),
+      add: (filename: string, text: string, projectId?: number) =>
+        ipcRenderer.invoke('documents:add', filename, text, projectId),
+      delete: (documentId: number, projectId?: number) =>
+        ipcRenderer.invoke('documents:delete', documentId, projectId)
     })
 
     contextBridge.exposeInMainWorld('modelsAPI', {

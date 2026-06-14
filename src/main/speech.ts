@@ -94,8 +94,9 @@ const toWav = (samples: number[], sampleRate: number): Uint8Array => {
   view.setUint32(40, dataLen, true)
   let offset = 44
   for (const sample of samples) {
-    const clamped = Math.max(-32768, Math.min(32767, sample))
-    view.setInt16(offset, clamped, true)
+    // QVAC TTS yields Float32 PCM in [-1, 1]; scale to signed 16-bit.
+    const clamped = Math.max(-1, Math.min(1, sample))
+    view.setInt16(offset, Math.round(clamped * 32767), true)
     offset += 2
   }
   return new Uint8Array(buffer)

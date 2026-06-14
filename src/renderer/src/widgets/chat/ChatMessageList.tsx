@@ -31,8 +31,8 @@ export const ChatMessageList = ({ messages, processing }: ChatMessageListProps) 
     try {
       const bytes = await window.speechAPI.speak(msg.content)
       if (bytes.byteLength > 0) playWav(bytes)
-    } catch {
-      // synthesis failed — ignore
+    } catch (err) {
+      console.error('[speech] playback failed', err)
     } finally {
       setSpeakingId(null)
     }

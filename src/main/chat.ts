@@ -1,4 +1,6 @@
+import { completion } from '@qvac/sdk'
 import * as secureStore from './secure-store'
+import { ensureModel } from './model'
 
 export interface ChatRow {
   id: number
@@ -73,7 +75,7 @@ const capitalizeTitle = (text: string): string => {
   return text.replace(/\b\w/g, (char) => char.toUpperCase())
 }
 
-const summarizeMock = (userText: string, assistantText: string): string => {
+const fallbackTitle = (userText: string, assistantText: string): string => {
   const source = `${userText} ${assistantText}`.trim()
   if (!source) return 'New chat'
 
@@ -180,7 +182,22 @@ export const updateChatTitle = (
   return chat
 }
 
-export const mockGenerateTitle = (chatId: number): ChatRow => {
+const TITLE_SYSTEM_PROMPT = `You write a short title for a finance chat.
+Given the opening of a conversation, reply with a concise title of 3 to 6 words
+that captures the topic. Reply with the title only — no surrounding quotes, no
+trailing punctuation, no preamble or explanation.`
+
+const cleanTitle = (raw: string): string => {
+  const text = raw
+    .replace(/<think>[\s\S]*?<\/think>/g, '')
+    .replace(/^["'`\s]+|["'`\s.]+$/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  if (!text) return ''
+  return capitalizeTitle(text.split(' ').slice(0, 6).join(' '))
+}
+
+export const generateChatTitle = async (chatId: number): Promise<ChatRow> => {
   const firstUser = secureStore.query<{ content: string }>(
     `SELECT content FROM chat_messages
      WHERE chat_id = ? AND role = 'user'
@@ -197,6 +214,28 @@ export const mockGenerateTitle = (chatId: number): ChatRow => {
     [chatId]
   )[0]
 
-  const title = summarizeMock(firstUser?.content ?? '', firstAssistant?.content ?? '')
-  return updateChatTitle(chatId, title, 'ready')
+  const userText = firstUser?.content ?? ''
+  const assistantText = firstAssistant?.content ?? ''
+  const source = `${userText}\n${assistantText}`.trim()
+  if (!source) return updateChatTitle(chatId, 'New chat', 'ready')
+
+  try {
+    const modelId = await ensureModel(() => {})
+    const run = completion({
+      modelId,
+      history: [
+        { role: 'system', content: TITLE_SYSTEM_PROMPT },
+        { role: 'user', content: `Conversation:\n${source}\n\nTitle:` }
+      ],
+      stream: false,
+      captureThinking: true
+    })
+    const final = await run.final
+    const title = cleanTitle(final.contentText ?? '')
+    if (!title) return updateChatTitle(chatId, fallbackTitle(userText, assistantText), 'ready')
+    return updateChatTitle(chatId, title, 'ready')
+  } catch (err) {
+    console.error('[chat] title generation failed, using fallback', err)
+    return updateChatTitle(chatId, fallbackTitle(userText, assistantText), 'ready')
+  }
 }

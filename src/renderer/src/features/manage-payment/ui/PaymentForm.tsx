@@ -17,6 +17,7 @@ import {
 interface PaymentFormProps {
   direction: PaymentDirection
   payment?: Payment
+  defaults?: Partial<PaymentFormInput>
   requireReason?: boolean
   submitLabel: string
   onSubmit: (values: ReturnType<typeof toPaymentInput> & { reason?: string }) => void
@@ -25,7 +26,8 @@ interface PaymentFormProps {
 
 const toFormValues = (
   payment: Payment | undefined,
-  direction: PaymentDirection
+  direction: PaymentDirection,
+  defaults?: Partial<PaymentFormInput>
 ): PaymentFormInput => {
   if (!payment) {
     return {
@@ -37,7 +39,8 @@ const toFormValues = (
       date: '',
       billingDay: 1,
       note: '',
-      reason: ''
+      reason: '',
+      ...defaults
     }
   }
 
@@ -60,6 +63,7 @@ const toFormValues = (
 export const PaymentForm = ({
   direction,
   payment,
+  defaults,
   requireReason = false,
   submitLabel,
   onSubmit,
@@ -67,7 +71,7 @@ export const PaymentForm = ({
 }: PaymentFormProps) => {
   const form = useForm<PaymentFormInput, unknown, PaymentFormValues>({
     resolver: zodResolver(paymentFormSchema),
-    defaultValues: toFormValues(payment, direction)
+    defaultValues: toFormValues(payment, direction, defaults)
   })
 
   const type = useWatch({ control: form.control, name: 'type' })
