@@ -117,6 +117,25 @@ if (process.contextIsolated) {
         ipcRenderer.invoke('documents:delete', documentId, projectId)
     })
 
+    contextBridge.exposeInMainWorld('projectsAPI', {
+      hydrate: () => ipcRenderer.invoke('projects:hydrate'),
+      create: (input: unknown) => ipcRenderer.invoke('projects:create', input),
+      addPayment: (projectId: string, input: unknown) =>
+        ipcRenderer.invoke('projects:addPayment', projectId, input),
+      updatePayment: (paymentId: string, input: unknown) =>
+        ipcRenderer.invoke('projects:updatePayment', paymentId, input),
+      deletePayment: (paymentId: string, input: unknown) =>
+        ipcRenderer.invoke('projects:deletePayment', paymentId, input),
+      addEmployee: (projectId: string, input: unknown) =>
+        ipcRenderer.invoke('projects:addEmployee', projectId, input),
+      updateEmployee: (employeeId: string, input: unknown) =>
+        ipcRenderer.invoke('projects:updateEmployee', employeeId, input),
+      deleteEmployee: (employeeId: string, input: unknown) =>
+        ipcRenderer.invoke('projects:deleteEmployee', employeeId, input),
+      savePlanTargets: (projectId: string, period: unknown, inputs: unknown[]) =>
+        ipcRenderer.invoke('projects:savePlanTargets', projectId, period, inputs)
+    })
+
     contextBridge.exposeInMainWorld('modelsAPI', {
       list: () => ipcRenderer.invoke('models:list'),
       select: (id: string) => ipcRenderer.invoke('models:select', id),

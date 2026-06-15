@@ -1,32 +1,70 @@
-import type { Employee, Payment, Project } from './types'
+export type DemoProjectKey = 'acme' | 'streampay'
 
-const now = (): string => new Date().toISOString()
+export interface DemoProjectSeed {
+  key: DemoProjectKey
+  name: string
+  currency: 'USD' | 'EUR' | 'GBP'
+  initialCash: number
+  description: string
+  type: 'personal' | 'business'
+}
 
-export const SEED_PROJECTS: Project[] = [
+export interface DemoPaymentSeed {
+  id: string
+  projectKey: DemoProjectKey
+  direction: 'expense' | 'income'
+  vendor: string
+  amount: number
+  type: 'recurring' | 'one-time'
+  category: string
+  date: string | null
+  billingDay: number | null
+  note: string | null
+  createdAt: string
+}
+
+export interface DemoEmployeeSeed {
+  id: string
+  projectKey: DemoProjectKey
+  name: string
+  salary: number
+  createdAt: string
+}
+
+export interface DemoPlanTargetSeed {
+  id: string
+  projectKey: DemoProjectKey
+  metric: 'revenue' | 'burn' | 'cash' | 'mrr' | 'runway'
+  targetValue: number
+  operator: 'gte' | 'lte' | 'eq'
+  periodGranularity: 'month' | 'quarter'
+  periodMonth: number
+  periodYear: number
+}
+
+export const DEMO_PROJECTS: DemoProjectSeed[] = [
   {
-    id: 'proj-acme',
+    key: 'acme',
     name: 'Acme Labs',
-    type: 'business',
     currency: 'USD',
     initialCash: 42_000,
     description: 'Infrastructure-heavy startup',
-    createdAt: now()
+    type: 'business'
   },
   {
-    id: 'proj-streampay',
+    key: 'streampay',
     name: 'StreamPay',
-    type: 'business',
     currency: 'USD',
     initialCash: 85_000,
     description: 'Subscription business with mixed revenue',
-    createdAt: now()
+    type: 'business'
   }
 ]
 
-export const SEED_PAYMENTS: Payment[] = [
+export const DEMO_PAYMENTS: DemoPaymentSeed[] = [
   {
     id: 'pay-vercel-acme',
-    projectId: 'proj-acme',
+    projectKey: 'acme',
     direction: 'expense',
     vendor: 'Vercel',
     amount: 5,
@@ -35,13 +73,11 @@ export const SEED_PAYMENTS: Payment[] = [
     date: null,
     billingDay: 1,
     note: null,
-    deletedAt: null,
-    history: [],
     createdAt: '2026-01-01T00:00:00.000Z'
   },
   {
     id: 'pay-aws-acme',
-    projectId: 'proj-acme',
+    projectKey: 'acme',
     direction: 'expense',
     vendor: 'AWS',
     amount: 500,
@@ -50,13 +86,11 @@ export const SEED_PAYMENTS: Payment[] = [
     date: null,
     billingDay: 1,
     note: null,
-    deletedAt: null,
-    history: [],
     createdAt: '2026-01-01T00:00:00.000Z'
   },
   {
     id: 'pay-ip-acme',
-    projectId: 'proj-acme',
+    projectKey: 'acme',
     direction: 'expense',
     vendor: 'IP for music',
     amount: 1000,
@@ -65,13 +99,11 @@ export const SEED_PAYMENTS: Payment[] = [
     date: '2026-05-15',
     billingDay: null,
     note: 'Music licensing',
-    deletedAt: null,
-    history: [],
     createdAt: '2026-05-15T00:00:00.000Z'
   },
   {
     id: 'pay-vercel-stream',
-    projectId: 'proj-streampay',
+    projectKey: 'streampay',
     direction: 'expense',
     vendor: 'Vercel',
     amount: 5,
@@ -80,13 +112,11 @@ export const SEED_PAYMENTS: Payment[] = [
     date: null,
     billingDay: 1,
     note: null,
-    deletedAt: null,
-    history: [],
     createdAt: '2026-01-01T00:00:00.000Z'
   },
   {
     id: 'pay-aws-stream',
-    projectId: 'proj-streampay',
+    projectKey: 'streampay',
     direction: 'expense',
     vendor: 'AWS',
     amount: 500,
@@ -95,13 +125,11 @@ export const SEED_PAYMENTS: Payment[] = [
     date: null,
     billingDay: 1,
     note: null,
-    deletedAt: null,
-    history: [],
     createdAt: '2026-01-01T00:00:00.000Z'
   },
   {
     id: 'pay-client-stream',
-    projectId: 'proj-streampay',
+    projectKey: 'streampay',
     direction: 'income',
     vendor: 'Client A',
     amount: 200,
@@ -110,13 +138,11 @@ export const SEED_PAYMENTS: Payment[] = [
     date: null,
     billingDay: 1,
     note: null,
-    deletedAt: null,
-    history: [],
     createdAt: '2026-01-01T00:00:00.000Z'
   },
   {
     id: 'pay-seed-stream',
-    projectId: 'proj-streampay',
+    projectKey: 'streampay',
     direction: 'income',
     vendor: 'Seed round',
     amount: 50_000,
@@ -125,65 +151,104 @@ export const SEED_PAYMENTS: Payment[] = [
     date: '2026-03-01',
     billingDay: null,
     note: null,
-    deletedAt: null,
-    history: [],
     createdAt: '2026-03-01T00:00:00.000Z'
   }
 ]
 
-export const SEED_EMPLOYEES: Employee[] = [
+export const DEMO_EMPLOYEES: DemoEmployeeSeed[] = [
   {
     id: 'emp-alice-acme',
-    projectId: 'proj-acme',
+    projectKey: 'acme',
     name: 'Alice',
     salary: 8000,
-    deletedAt: null,
-    history: [],
     createdAt: '2026-01-01T00:00:00.000Z'
   },
   {
     id: 'emp-bob-acme',
-    projectId: 'proj-acme',
+    projectKey: 'acme',
     name: 'Bob',
     salary: 5000,
-    deletedAt: null,
-    history: [],
     createdAt: '2026-01-01T00:00:00.000Z'
   },
   {
     id: 'emp-carol-acme',
-    projectId: 'proj-acme',
+    projectKey: 'acme',
     name: 'Carol',
     salary: 3500,
-    deletedAt: null,
-    history: [],
     createdAt: '2026-01-01T00:00:00.000Z'
   },
   {
     id: 'emp-dana-stream',
-    projectId: 'proj-streampay',
+    projectKey: 'streampay',
     name: 'Dana',
     salary: 10_000,
-    deletedAt: null,
-    history: [],
     createdAt: '2026-01-01T00:00:00.000Z'
   },
   {
     id: 'emp-evan-stream',
-    projectId: 'proj-streampay',
+    projectKey: 'streampay',
     name: 'Evan',
     salary: 6000,
-    deletedAt: null,
-    history: [],
     createdAt: '2026-01-01T00:00:00.000Z'
   },
   {
     id: 'emp-faye-stream',
-    projectId: 'proj-streampay',
+    projectKey: 'streampay',
     name: 'Faye',
     salary: 4500,
-    deletedAt: null,
-    history: [],
     createdAt: '2026-01-01T00:00:00.000Z'
+  }
+]
+
+export const DEMO_PLAN_TARGETS: DemoPlanTargetSeed[] = [
+  {
+    id: 'plan-acme-revenue-jun',
+    projectKey: 'acme',
+    metric: 'revenue',
+    targetValue: 12_000,
+    operator: 'gte',
+    periodGranularity: 'month',
+    periodMonth: 6,
+    periodYear: 2026
+  },
+  {
+    id: 'plan-acme-burn-jun',
+    projectKey: 'acme',
+    metric: 'burn',
+    targetValue: 8_500,
+    operator: 'lte',
+    periodGranularity: 'month',
+    periodMonth: 6,
+    periodYear: 2026
+  },
+  {
+    id: 'plan-acme-runway-jun',
+    projectKey: 'acme',
+    metric: 'runway',
+    targetValue: 10,
+    operator: 'gte',
+    periodGranularity: 'month',
+    periodMonth: 6,
+    periodYear: 2026
+  },
+  {
+    id: 'plan-streampay-revenue-q2',
+    projectKey: 'streampay',
+    metric: 'revenue',
+    targetValue: 45_000,
+    operator: 'gte',
+    periodGranularity: 'quarter',
+    periodMonth: 4,
+    periodYear: 2026
+  },
+  {
+    id: 'plan-streampay-mrr-q2',
+    projectKey: 'streampay',
+    metric: 'mrr',
+    targetValue: 12_000,
+    operator: 'gte',
+    periodGranularity: 'quarter',
+    periodMonth: 4,
+    periodYear: 2026
   }
 ]

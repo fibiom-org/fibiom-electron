@@ -14,11 +14,10 @@ export interface DocumentRow {
   created_at: string
 }
 
-const resolveProjectId = (projectId?: number): number => {
+const resolveProjectId = (projectId?: number): number | null => {
   if (projectId) return projectId
   const row = secureStore.query<{ id: number }>('SELECT id FROM projects ORDER BY id LIMIT 1')[0]
-  if (!row) throw new Error('No project found — complete onboarding first')
-  return row.id
+  return row?.id ?? null
 }
 
 const sourceTypeFor = (documentId: number): string => `doc:${documentId}`
@@ -43,6 +42,7 @@ const chunkText = (text: string): string[] => {
 
 export const listDocuments = (projectId?: number): DocumentRow[] => {
   const pid = resolveProjectId(projectId)
+  if (pid === null) return []
   return secureStore.query<DocumentRow>(
     `SELECT id, project_id, filename, char_count, chunk_count, created_at
      FROM documents
@@ -58,6 +58,7 @@ export const addDocument = async (
   projectId?: number
 ): Promise<DocumentRow> => {
   const pid = resolveProjectId(projectId)
+  if (pid === null) throw new Error('Create a project before uploading documents')
   const clean = text
     .replace(/[ \t]+/g, ' ')
     .replace(/\n{3,}/g, '\n\n')
@@ -100,6 +101,7 @@ export const addDocument = async (
 
 export const deleteDocument = (documentId: number, projectId?: number): void => {
   const pid = resolveProjectId(projectId)
+  if (pid === null) return
   secureStore.exec('DELETE FROM rag_chunks WHERE project_id = ? AND source_type = ?', [
     pid,
     sourceTypeFor(documentId)
