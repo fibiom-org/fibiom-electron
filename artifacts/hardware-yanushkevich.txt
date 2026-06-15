@@ -1,0 +1,32 @@
+# Hardware proof — generated 2026-06-15T17:06:26Z
+
+uname: Darwin PC-FVFGQ066Q05R 23.4.0 Darwin Kernel Version 23.4.0: Fri Mar 15 00:12:41 PDT 2024; root:xnu-10063.101.17~1/RELEASE_ARM64_T8103 arm64
+
+## CPU
+
+Apple M1
+cores: 8
+
+## Memory
+
+16384 MB
+
+## Model
+
+MacBookPro17,1
+
+## GPU / Chip
+
+Model Name: MacBook Pro
+Chip: Apple M1
+Total Number of Cores: 8 (4 performance and 4 efficiency)
+Memory: 16 GB
+Chipset Model: Apple M1
+Total Number of Cores: 8
+Vendor: Apple (0x106b)
+Metal Support: Metal 3
+
+## Disk
+
+Filesystem Size Used Avail Capacity iused ifree %iused Mounted on
+/dev/disk3s5 926Gi 350Gi 542Gi 40% 6.8M 5.7G 0% /System/Volumes/Data

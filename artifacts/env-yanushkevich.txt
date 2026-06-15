@@ -1,0 +1,10 @@
+# Environment — generated 2026-06-15T17:06:26Z
+node:      v20.19.5
+yarn:      1.22.19
+electron:  ^39.2.6
+@qvac/sdk: 0.12.2
+git commit: 10dceaf78a7071946408e392f59366b8fe111d62
+git branch: main
+git status:
+ M artifacts/env.txt
+ M artifacts/hardware.txt
