@@ -10,6 +10,7 @@ import { registerLlmHandlers } from './llm'
 import { registerModelHandlers } from './model-handlers'
 import { registerSettingsHandlers } from './settings-handlers'
 import { registerDocumentHandlers } from './document-handlers'
+import { registerProjectHandlers } from './project-handlers'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -63,6 +64,7 @@ app.whenReady().then(() => {
   registerModelHandlers()
   registerSettingsHandlers()
   registerDocumentHandlers()
+  registerProjectHandlers()
 
   createWindow()
 

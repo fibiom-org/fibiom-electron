@@ -23,10 +23,9 @@ export interface ChatWithMessages extends ChatRow {
   messages: ChatMessageRow[]
 }
 
-const defaultProjectId = (): number => {
+const defaultProjectId = (): number | null => {
   const row = secureStore.query<{ id: number }>('SELECT id FROM projects ORDER BY id LIMIT 1')[0]
-  if (!row) throw new Error('No project found — complete onboarding first')
-  return row.id
+  return row?.id ?? null
 }
 
 const touchChat = (chatId: number): void => {
@@ -96,6 +95,7 @@ const fallbackTitle = (userText: string, assistantText: string): string => {
 
 export const listChats = (projectId?: number): ChatRow[] => {
   const pid = projectId ?? defaultProjectId()
+  if (pid === null) return []
   return secureStore.query<ChatRow>(
     `SELECT id, project_id, title, title_status, created_at, updated_at
      FROM chats
@@ -126,6 +126,7 @@ export const getChat = (chatId: number): ChatWithMessages | null => {
 
 export const createChat = (projectId?: number, title?: string | null): ChatRow => {
   const pid = projectId ?? defaultProjectId()
+  if (pid === null) throw new Error('Create a project before starting a chat')
   secureStore.exec(
     `INSERT INTO chats (project_id, title, title_status)
      VALUES (?, ?, ?)`,
