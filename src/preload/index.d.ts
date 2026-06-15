@@ -135,6 +135,136 @@ interface DocumentsAPI {
   delete: (documentId: number, projectId?: number) => Promise<void>
 }
 
+interface ProjectEntity {
+  id: string
+  name: string
+  type: 'personal' | 'business'
+  currency: 'USD' | 'EUR' | 'GBP'
+  initialCash: number
+  description: string | null
+  createdAt: string
+}
+
+interface ChangeRecord {
+  id: string
+  timestamp: string
+  summary: string
+  reason: string
+}
+
+interface PaymentEntity {
+  id: string
+  projectId: string
+  direction: 'expense' | 'income'
+  vendor: string
+  amount: number
+  type: 'recurring' | 'one-time'
+  category: string
+  date: string | null
+  billingDay: number | null
+  note: string | null
+  deletedAt: string | null
+  history: ChangeRecord[]
+  createdAt: string
+}
+
+interface EmployeeEntity {
+  id: string
+  projectId: string
+  name: string
+  salary: number
+  deletedAt: string | null
+  history: ChangeRecord[]
+  createdAt: string
+}
+
+interface PlanPeriodEntity {
+  granularity: 'month' | 'quarter'
+  month: number
+  year: number
+}
+
+interface PlanTargetEntity {
+  id: string
+  projectId: string
+  metric: 'revenue' | 'burn' | 'cash' | 'mrr' | 'runway'
+  targetValue: number
+  operator: 'gte' | 'lte' | 'eq'
+  period: PlanPeriodEntity
+  createdAt: string
+  updatedAt: string
+}
+
+interface ProjectsHydrateResult {
+  projects: ProjectEntity[]
+  payments: PaymentEntity[]
+  employees: EmployeeEntity[]
+  planTargets: PlanTargetEntity[]
+}
+
+interface ProjectsAPI {
+  hydrate: () => Promise<ProjectsHydrateResult>
+  create: (input: {
+    name: string
+    currency: 'USD' | 'EUR' | 'GBP'
+    initialCash?: number
+    description?: string
+    type?: 'personal' | 'business'
+  }) => Promise<ProjectEntity>
+  addPayment: (
+    projectId: string,
+    input: {
+      direction: 'expense' | 'income'
+      vendor: string
+      amount: number
+      type: 'recurring' | 'one-time'
+      category: string
+      date: string | null
+      billingDay: number | null
+      note: string | null
+    }
+  ) => Promise<PaymentEntity>
+  updatePayment: (
+    paymentId: string,
+    input: {
+      direction: 'expense' | 'income'
+      vendor: string
+      amount: number
+      type: 'recurring' | 'one-time'
+      category: string
+      date: string | null
+      billingDay: number | null
+      note: string | null
+      reason: string
+    }
+  ) => Promise<PaymentEntity | null>
+  deletePayment: (
+    paymentId: string,
+    input: { reason: string }
+  ) => Promise<PaymentEntity | null>
+  addEmployee: (
+    projectId: string,
+    input: { name: string; salary: number }
+  ) => Promise<EmployeeEntity>
+  updateEmployee: (
+    employeeId: string,
+    input: { name: string; salary: number; reason: string }
+  ) => Promise<EmployeeEntity | null>
+  deleteEmployee: (
+    employeeId: string,
+    input: { reason: string }
+  ) => Promise<EmployeeEntity | null>
+  savePlanTargets: (
+    projectId: string,
+    period: PlanPeriodEntity,
+    inputs: Array<{
+      metric: PlanTargetEntity['metric']
+      targetValue: number
+      operator: PlanTargetEntity['operator']
+    }>
+  ) => Promise<PlanTargetEntity[]>
+}
+
 declare global {
   interface Window {
     electron: ElectronAPI
@@ -148,6 +278,7 @@ declare global {
     settingsAPI: SettingsAPI
     modelsAPI: ModelsAPI
     documentsAPI: DocumentsAPI
+    projectsAPI: ProjectsAPI
   }
 }
 
