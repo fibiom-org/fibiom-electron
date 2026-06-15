@@ -7,11 +7,24 @@ export interface DashboardPeriod {
   year: number
 }
 
-export interface PaymentChangeRecord {
+export interface ChangeRecord {
   id: string
   timestamp: string
   summary: string
   reason: string
+}
+
+export type PaymentChangeRecord = ChangeRecord
+export type EmployeeChangeRecord = ChangeRecord
+
+export interface Employee {
+  id: string
+  projectId: string
+  name: string
+  salary: number
+  deletedAt: string | null
+  history: EmployeeChangeRecord[]
+  createdAt: string
 }
 
 export interface Payment {
@@ -33,6 +46,7 @@ export interface Payment {
 export interface Project {
   id: string
   name: string
+  type: 'personal' | 'business'
   currency: ProjectCurrency
   initialCash: number
   description: string | null
@@ -63,6 +77,20 @@ export interface ProjectDashboardData {
   expenseSlices: CategorySlice[]
   monthlyTotals: MonthlyTotals[]
   payments: Payment[]
+  employees: Employee[]
+}
+
+export interface EmployeeInput {
+  name: string
+  salary: number
+}
+
+export interface UpdateEmployeeInput extends EmployeeInput {
+  reason: string
+}
+
+export interface DeleteEmployeeInput {
+  reason: string
 }
 
 export interface CreateProjectInput {
@@ -70,6 +98,7 @@ export interface CreateProjectInput {
   currency: ProjectCurrency
   initialCash?: number
   description?: string
+  type?: 'personal' | 'business'
 }
 
 export interface PaymentInput {

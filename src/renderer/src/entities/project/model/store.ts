@@ -1,23 +1,24 @@
 import {
   computeExpenseSlices,
   computeKpi,
-  computeMonthlyTotals,
-  summarizePaymentChanges
+  computeMonthlyTotals
 } from './compute'
 import { computeProjectPlan } from './plan-compute'
 import { normalizePlanPeriod, planPeriodStorageKey } from './plan-period'
 import type { PlanPeriod } from './plan-period'
-import { SEED_PLAN_TARGETS } from './plan-seed'
 import type { PlanTarget, PlanTargetInput, ProjectPlanData } from './plan-types'
-import { SEED_PAYMENTS, SEED_PROJECTS } from './seed'
 import type {
   CreateProjectInput,
   DashboardPeriod,
+  DeleteEmployeeInput,
   DeletePaymentInput,
+  Employee,
+  EmployeeInput,
   Payment,
   PaymentInput,
   Project,
   ProjectDashboardData,
+  UpdateEmployeeInput,
   UpdatePaymentInput
 } from './types'
 
@@ -26,16 +27,18 @@ type Listener = () => void
 interface ProjectStoreState {
   projects: Project[]
   payments: Payment[]
+  employees: Employee[]
   planTargets: PlanTarget[]
 }
 
-const createId = (): string => crypto.randomUUID()
-
 let state: ProjectStoreState = {
-  projects: [...SEED_PROJECTS],
-  payments: [...SEED_PAYMENTS],
-  planTargets: [...SEED_PLAN_TARGETS]
+  projects: [],
+  payments: [],
+  employees: [],
+  planTargets: []
 }
+
+let hydratePromise: Promise<void> | null = null
 
 const listeners = new Set<Listener>()
 
@@ -45,12 +48,31 @@ const emit = (): void => {
   }
 }
 
+const applyHydrate = (next: ProjectStoreState): void => {
+  state = next
+  emit()
+}
+
 export const subscribe = (listener: Listener): (() => void) => {
   listeners.add(listener)
   return () => listeners.delete(listener)
 }
 
 export const getSnapshot = (): ProjectStoreState => state
+
+export const hydrate = async (): Promise<void> => {
+  if (!hydratePromise) {
+    hydratePromise = window.projectsAPI
+      .hydrate()
+      .then((data) => {
+        applyHydrate(data)
+      })
+      .finally(() => {
+        hydratePromise = null
+      })
+  }
+  await hydratePromise
+}
 
 export const listProjects = (): Project[] => state.projects
 
@@ -60,57 +82,45 @@ export const getProject = (projectId: string): Project | undefined =>
 export const getProjectPayments = (projectId: string): Payment[] =>
   state.payments.filter((payment) => payment.projectId === projectId)
 
+export const getProjectEmployees = (projectId: string): Employee[] =>
+  state.employees.filter((employee) => employee.projectId === projectId)
+
 export const getProjectPlanTargets = (projectId: string, period: PlanPeriod): PlanTarget[] => {
   const key = planPeriodStorageKey(period)
   return state.planTargets.filter(
-    (target) =>
-      target.projectId === projectId && planPeriodStorageKey(target.period) === key
+    (target) => target.projectId === projectId && planPeriodStorageKey(target.period) === key
   )
 }
 
-export const saveProjectPlanTargets = (
+export const saveProjectPlanTargets = async (
   projectId: string,
   period: PlanPeriod,
   inputs: PlanTargetInput[]
-): void => {
+): Promise<void> => {
   const normalized = normalizePlanPeriod(period)
   const key = planPeriodStorageKey(normalized)
-  const timestamp = new Date().toISOString()
+  const saved = await window.projectsAPI.savePlanTargets(projectId, normalized, inputs)
 
   const rest = state.planTargets.filter(
-    (target) =>
-      !(target.projectId === projectId && planPeriodStorageKey(target.period) === key)
+    (target) => !(target.projectId === projectId && planPeriodStorageKey(target.period) === key)
   )
-
-  const next = inputs.map((input) => ({
-    id: createId(),
-    projectId,
-    metric: input.metric,
-    targetValue: input.targetValue,
-    operator: input.operator,
-    period: normalized,
-    createdAt: timestamp,
-    updatedAt: timestamp
-  }))
 
   state = {
     ...state,
-    planTargets: [...rest, ...next]
+    planTargets: [...rest, ...saved]
   }
   emit()
 }
 
-export const getProjectPlan = (
-  projectId: string,
-  period: PlanPeriod
-): ProjectPlanData | null => {
+export const getProjectPlan = (projectId: string, period: PlanPeriod): ProjectPlanData | null => {
   const project = getProject(projectId)
   if (!project) return null
 
   const payments = getProjectPayments(projectId)
+  const employees = getProjectEmployees(projectId)
   const targets = getProjectPlanTargets(projectId, period)
 
-  return computeProjectPlan(project, payments, period, targets)
+  return computeProjectPlan(project, payments, employees, period, targets)
 }
 
 export const getProjectDashboard = (
@@ -121,25 +131,22 @@ export const getProjectDashboard = (
   if (!project) return null
 
   const payments = getProjectPayments(projectId)
+  const employees = getProjectEmployees(projectId)
 
   return {
-    kpi: computeKpi(project, payments, period),
-    expenseSlices: computeExpenseSlices(payments, period),
-    monthlyTotals: computeMonthlyTotals(payments, period),
-    payments
+    kpi: computeKpi(project, payments, employees, period),
+    expenseSlices: computeExpenseSlices(payments, employees, period),
+    monthlyTotals: computeMonthlyTotals(payments, employees, period),
+    payments,
+    employees
   }
 }
 
-export const createProject = (input: CreateProjectInput): Project => {
-  const project: Project = {
-    id: createId(),
-    name: input.name.trim(),
-    currency: input.currency,
-    initialCash: input.initialCash ?? 0,
-    description: input.description?.trim() || null,
-    createdAt: new Date().toISOString()
-  }
-
+export const createProject = async (input: CreateProjectInput): Promise<Project> => {
+  const project = await window.projectsAPI.create({
+    ...input,
+    type: input.type ?? 'business'
+  })
   state = {
     ...state,
     projects: [...state.projects, project]
@@ -148,23 +155,8 @@ export const createProject = (input: CreateProjectInput): Project => {
   return project
 }
 
-export const addPayment = (projectId: string, input: PaymentInput): Payment => {
-  const payment: Payment = {
-    id: createId(),
-    projectId,
-    direction: input.direction,
-    vendor: input.vendor.trim(),
-    amount: input.amount,
-    type: input.type,
-    category: input.category,
-    date: input.date,
-    billingDay: input.billingDay,
-    note: input.note?.trim() || null,
-    deletedAt: null,
-    history: [],
-    createdAt: new Date().toISOString()
-  }
-
+export const addPayment = async (projectId: string, input: PaymentInput): Promise<Payment> => {
+  const payment = await window.projectsAPI.addPayment(projectId, input)
   state = {
     ...state,
     payments: [...state.payments, payment]
@@ -173,63 +165,68 @@ export const addPayment = (projectId: string, input: PaymentInput): Payment => {
   return payment
 }
 
-export const updatePayment = (paymentId: string, input: UpdatePaymentInput): Payment | null => {
-  const index = state.payments.findIndex((payment) => payment.id === paymentId)
-  if (index === -1) return null
+export const updatePayment = async (
+  paymentId: string,
+  input: UpdatePaymentInput
+): Promise<Payment | null> => {
+  const updated = await window.projectsAPI.updatePayment(paymentId, input)
+  if (!updated) return null
 
-  const before = state.payments[index]
-  const summary = summarizePaymentChanges(before, input)
-  if (!summary) return before
-
-  const updated: Payment = {
-    ...before,
-    vendor: input.vendor.trim(),
-    amount: input.amount,
-    type: input.type,
-    category: input.category,
-    date: input.date,
-    billingDay: input.billingDay,
-    note: input.note?.trim() || null,
-    history: [
-      {
-        id: createId(),
-        timestamp: new Date().toISOString(),
-        summary,
-        reason: input.reason.trim()
-      },
-      ...before.history
-    ]
-  }
-
-  const payments = [...state.payments]
-  payments[index] = updated
+  const payments = state.payments.map((payment) => (payment.id === paymentId ? updated : payment))
   state = { ...state, payments }
   emit()
   return updated
 }
 
-export const deletePayment = (paymentId: string, input: DeletePaymentInput): Payment | null => {
-  const index = state.payments.findIndex((payment) => payment.id === paymentId)
-  if (index === -1) return null
+export const deletePayment = async (
+  paymentId: string,
+  input: DeletePaymentInput
+): Promise<Payment | null> => {
+  const updated = await window.projectsAPI.deletePayment(paymentId, input)
+  if (!updated) return null
 
-  const before = state.payments[index]
-  const updated: Payment = {
-    ...before,
-    deletedAt: new Date().toISOString(),
-    history: [
-      {
-        id: createId(),
-        timestamp: new Date().toISOString(),
-        summary: 'deleted',
-        reason: input.reason.trim()
-      },
-      ...before.history
-    ]
-  }
-
-  const payments = [...state.payments]
-  payments[index] = updated
+  const payments = state.payments.map((payment) => (payment.id === paymentId ? updated : payment))
   state = { ...state, payments }
+  emit()
+  return updated
+}
+
+export const addEmployee = async (projectId: string, input: EmployeeInput): Promise<Employee> => {
+  const employee = await window.projectsAPI.addEmployee(projectId, input)
+  state = {
+    ...state,
+    employees: [...state.employees, employee]
+  }
+  emit()
+  return employee
+}
+
+export const updateEmployee = async (
+  employeeId: string,
+  input: UpdateEmployeeInput
+): Promise<Employee | null> => {
+  const updated = await window.projectsAPI.updateEmployee(employeeId, input)
+  if (!updated) return null
+
+  const employees = state.employees.map((employee) =>
+    employee.id === employeeId ? updated : employee
+  )
+  state = { ...state, employees }
+  emit()
+  return updated
+}
+
+export const deleteEmployee = async (
+  employeeId: string,
+  input: DeleteEmployeeInput
+): Promise<Employee | null> => {
+  const updated = await window.projectsAPI.deleteEmployee(employeeId, input)
+  if (!updated) return null
+
+  const employees = state.employees.map((employee) =>
+    employee.id === employeeId ? updated : employee
+  )
+  state = { ...state, employees }
   emit()
   return updated
 }

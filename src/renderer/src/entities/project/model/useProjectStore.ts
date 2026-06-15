@@ -1,14 +1,10 @@
 import { useSyncExternalStore } from 'react'
-import {
-  computeExpenseSlices,
-  computeKpi,
-  computeMonthlyTotals
-} from './compute'
+import { computeExpenseSlices, computeKpi, computeMonthlyTotals } from './compute'
 import { computeProjectPlan } from './plan-compute'
 import type { PlanPeriod } from './plan-period'
 import type { ProjectPlanData } from './plan-types'
 import { getProjectPlanTargets, getSnapshot, subscribe } from './store'
-import type { DashboardPeriod, Payment, Project, ProjectDashboardData } from './types'
+import type { DashboardPeriod, Employee, Payment, Project, ProjectDashboardData } from './types'
 
 export const useProjects = (): Project[] => {
   const { projects } = useSyncExternalStore(subscribe, getSnapshot)
@@ -27,23 +23,31 @@ export const useProjectPayments = (projectId: string | undefined): Payment[] => 
   return payments.filter((payment) => payment.projectId === projectId)
 }
 
+export const useProjectEmployees = (projectId: string | undefined): Employee[] => {
+  const { employees } = useSyncExternalStore(subscribe, getSnapshot)
+  if (!projectId) return []
+  return employees.filter((employee) => employee.projectId === projectId)
+}
+
 export const useProjectDashboard = (
   projectId: string | undefined,
   period: DashboardPeriod
 ): ProjectDashboardData | null => {
-  const { projects, payments } = useSyncExternalStore(subscribe, getSnapshot)
+  const { projects, payments, employees } = useSyncExternalStore(subscribe, getSnapshot)
   if (!projectId) return null
 
   const project = projects.find((item) => item.id === projectId)
   if (!project) return null
 
   const projectPayments = payments.filter((payment) => payment.projectId === projectId)
+  const projectEmployees = employees.filter((employee) => employee.projectId === projectId)
 
   return {
-    kpi: computeKpi(project, projectPayments, period),
-    expenseSlices: computeExpenseSlices(projectPayments, period),
-    monthlyTotals: computeMonthlyTotals(projectPayments, period),
-    payments: projectPayments
+    kpi: computeKpi(project, projectPayments, projectEmployees, period),
+    expenseSlices: computeExpenseSlices(projectPayments, projectEmployees, period),
+    monthlyTotals: computeMonthlyTotals(projectPayments, projectEmployees, period),
+    payments: projectPayments,
+    employees: projectEmployees
   }
 }
 
@@ -58,9 +62,10 @@ export const useProjectPlan = (
   if (!project) return null
 
   const projectPayments = state.payments.filter((payment) => payment.projectId === projectId)
+  const projectEmployees = state.employees.filter((employee) => employee.projectId === projectId)
   const targets = getProjectPlanTargets(projectId, period)
 
-  return computeProjectPlan(project, projectPayments, period, targets)
+  return computeProjectPlan(project, projectPayments, projectEmployees, period, targets)
 }
 
 export const useProjectPlanTargets = (projectId: string | undefined, period: PlanPeriod) => {

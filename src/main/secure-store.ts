@@ -1,10 +1,11 @@
-import { app } from 'electron'
 import { join } from 'path'
 import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'fs'
 import { randomBytes } from 'crypto'
 import Database from 'better-sqlite3-multiple-ciphers'
 import * as argon2 from 'argon2'
+import { app } from 'electron'
 import { runMigrations } from './schema'
+import { devDbBaseDir, devDbFilePath, devDbMetaFilePath } from './db-path'
 
 /**
  * Master-key secured SQLite store.
@@ -38,25 +39,18 @@ const ARGON2_OPTS = {
   parallelism: 1
 } as const
 
-const SEED_CATEGORIES: { name: string; type: 'income' | 'expense' }[] = [
-  { name: 'Food', type: 'expense' },
-  { name: 'Transport', type: 'expense' },
-  { name: 'Salary', type: 'income' },
-  { name: 'Entertainment', type: 'expense' },
-  { name: 'Other', type: 'expense' }
-]
 let db: Database.Database | null = null
 
 function baseDir(): string {
-  return app.isPackaged ? app.getPath('userData') : join(process.cwd(), 'db')
+  return app.isPackaged ? app.getPath('userData') : devDbBaseDir()
 }
 
 function dbFile(): string {
-  return process.env.SQLITE_PATH ?? join(baseDir(), 'app.sqlite')
+  return process.env.SQLITE_PATH ?? (app.isPackaged ? join(baseDir(), 'app.sqlite') : devDbFilePath())
 }
 
 function metaFile(): string {
-  return join(baseDir(), 'auth.json')
+  return app.isPackaged ? join(baseDir(), 'auth.json') : devDbMetaFilePath()
 }
 
 function readMeta(): Meta | null {
@@ -93,41 +87,11 @@ async function ensureUser(conn: Database.Database, masterKey: string): Promise<v
   conn.prepare('INSERT INTO users (master_password_hash) VALUES (?)').run(hash)
 }
 
-/**
- * Seed the minimum data a transaction needs
- */
-function ensureSeed(conn: Database.Database): void {
-  const userId = conn.prepare('SELECT id FROM users ORDER BY id LIMIT 1').get() as
-    | { id: number }
-    | undefined
-  if (!userId) return
+export const connection = (): Database.Database => requireDb()
 
-  const { p } = conn.prepare('SELECT count(*) AS p FROM projects').get() as { p: number }
-  if (p === 0) {
-    conn
-      .prepare(
-        "INSERT INTO projects (user_id, name, type, currency) VALUES (?, 'Personal', 'personal', 'USD')"
-      )
-      .run(userId.id)
-  }
-  const project = conn.prepare('SELECT id FROM projects ORDER BY id LIMIT 1').get() as {
-    id: number
-  }
-
-  const { a } = conn.prepare('SELECT count(*) AS a FROM accounts').get() as { a: number }
-  if (a === 0) {
-    conn
-      .prepare(
-        "INSERT INTO accounts (project_id, name, type, currency) VALUES (?, 'Cash', 'cash', 'USD')"
-      )
-      .run(project.id)
-  }
-
-  const { c } = conn.prepare('SELECT count(*) AS c FROM categories').get() as { c: number }
-  if (c === 0) {
-    const insert = conn.prepare('INSERT INTO categories (project_id, name, type) VALUES (?, ?, ?)')
-    for (const cat of SEED_CATEGORIES) insert.run(project.id, cat.name, cat.type)
-  }
+export const transaction = <T>(fn: () => T): T => {
+  const conn = requireDb()
+  return conn.transaction(fn)()
 }
 
 export function status(): AuthStatus {
@@ -145,7 +109,6 @@ export async function setup(masterKey: string): Promise<void> {
   const conn = keyedConnection(hexKey)
   runMigrations(conn)
   await ensureUser(conn, masterKey)
-  ensureSeed(conn)
 
   const meta: Meta = {
     salt: salt.toString('hex'),
@@ -173,7 +136,6 @@ export async function unlock(masterKey: string): Promise<boolean> {
   }
   runMigrations(conn)
   await ensureUser(conn, masterKey)
-  ensureSeed(conn)
   db = conn
   return true
 }

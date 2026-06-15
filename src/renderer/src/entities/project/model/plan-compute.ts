@@ -1,9 +1,5 @@
 import { computeKpi } from './compute'
-import {
-  expandPlanPeriodToMonths,
-  isPlanPeriodCurrent,
-  isPlanPeriodPast
-} from './plan-period'
+import { expandPlanPeriodToMonths, isPlanPeriodCurrent, isPlanPeriodPast } from './plan-period'
 import type { PlanPeriod } from './plan-period'
 import {
   PLAN_METRIC_LABELS,
@@ -15,7 +11,7 @@ import {
   type PlanTargetOperator,
   type ProjectPlanData
 } from './plan-types'
-import type { Payment, Project, ProjectKpi } from './types'
+import type { Employee, Payment, Project, ProjectKpi } from './types'
 
 const kpiValue = (kpi: ProjectKpi, metric: PlanMetric): number => {
   if (metric === 'runway') return kpi.runwayMonths ?? 0
@@ -26,15 +22,16 @@ export const aggregateMetricValue = (
   metric: PlanMetric,
   project: Project,
   payments: Payment[],
+  employees: Employee[],
   period: PlanPeriod
 ): number => {
   const months = expandPlanPeriodToMonths(period)
 
   if (months.length === 1) {
-    return kpiValue(computeKpi(project, payments, months[0]), metric)
+    return kpiValue(computeKpi(project, payments, employees, months[0]), metric)
   }
 
-  const kpis = months.map((month) => computeKpi(project, payments, month))
+  const kpis = months.map((month) => computeKpi(project, payments, employees, month))
 
   switch (metric) {
     case 'revenue':
@@ -49,21 +46,13 @@ export const aggregateMetricValue = (
   }
 }
 
-const meetsTarget = (
-  value: number,
-  target: number,
-  operator: PlanTargetOperator
-): boolean => {
+const meetsTarget = (value: number, target: number, operator: PlanTargetOperator): boolean => {
   if (operator === 'gte') return value >= target
   if (operator === 'lte') return value <= target
   return value === target
 }
 
-const variancePct = (
-  value: number,
-  target: number,
-  operator: PlanTargetOperator
-): number => {
+const variancePct = (value: number, target: number, operator: PlanTargetOperator): number => {
   if (target === 0) return 0
 
   if (operator === 'lte') {
@@ -127,6 +116,7 @@ const buildMetricRow = (
 export const computeProjectPlan = (
   project: Project,
   payments: Payment[],
+  employees: Employee[],
   period: PlanPeriod,
   targets: PlanTarget[]
 ): ProjectPlanData => {
@@ -134,7 +124,7 @@ export const computeProjectPlan = (
   const isCurrent = isPlanPeriodCurrent(period)
 
   const rows = PLAN_METRICS.map((metric) => {
-    const forecastValue = aggregateMetricValue(metric, project, payments, period)
+    const forecastValue = aggregateMetricValue(metric, project, payments, employees, period)
     const actualValue = isPast ? forecastValue : null
 
     return buildMetricRow(metric, targets, forecastValue, actualValue, isPast)

@@ -26,5 +26,5 @@ export const registerChatHandlers = (): void => {
       chat.updateChatTitle(chatId, title, titleStatus)
   )
 
-  ipcMain.handle('chat:generateTitle', (_event, chatId: number) => chat.mockGenerateTitle(chatId))
+  ipcMain.handle('chat:generateTitle', (_event, chatId: number) => chat.generateChatTitle(chatId))
 }

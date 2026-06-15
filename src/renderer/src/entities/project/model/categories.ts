@@ -1,3 +1,5 @@
+export const PAYROLL_CATEGORY = 'Payroll'
+
 export const EXPENSE_CATEGORIES = [
   'SaaS',
   'Infrastructure',

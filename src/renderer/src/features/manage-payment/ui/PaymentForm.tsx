@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import type { Payment, PaymentDirection } from '@renderer/entities/project'
-import { getCategoriesForDirection } from '@renderer/entities/project'
+import { getCategoriesForDirection, PAYROLL_CATEGORY } from '@renderer/entities/project'
 import { Button } from '@renderer/components/ui/Button'
 import { Input } from '@renderer/components/ui/Input'
 import { Form, FormButton, FormField } from '@renderer/shared/ui'
@@ -17,6 +17,7 @@ import {
 interface PaymentFormProps {
   direction: PaymentDirection
   payment?: Payment
+  defaults?: Partial<PaymentFormInput>
   requireReason?: boolean
   submitLabel: string
   onSubmit: (values: ReturnType<typeof toPaymentInput> & { reason?: string }) => void
@@ -25,7 +26,8 @@ interface PaymentFormProps {
 
 const toFormValues = (
   payment: Payment | undefined,
-  direction: PaymentDirection
+  direction: PaymentDirection,
+  defaults?: Partial<PaymentFormInput>
 ): PaymentFormInput => {
   if (!payment) {
     return {
@@ -37,7 +39,8 @@ const toFormValues = (
       date: '',
       billingDay: 1,
       note: '',
-      reason: ''
+      reason: '',
+      ...defaults
     }
   }
 
@@ -60,6 +63,7 @@ const toFormValues = (
 export const PaymentForm = ({
   direction,
   payment,
+  defaults,
   requireReason = false,
   submitLabel,
   onSubmit,
@@ -67,12 +71,14 @@ export const PaymentForm = ({
 }: PaymentFormProps) => {
   const form = useForm<PaymentFormInput, unknown, PaymentFormValues>({
     resolver: zodResolver(paymentFormSchema),
-    defaultValues: toFormValues(payment, direction)
+    defaultValues: toFormValues(payment, direction, defaults)
   })
 
   const type = useWatch({ control: form.control, name: 'type' })
   const category = useWatch({ control: form.control, name: 'category' })
-  const categories = getCategoriesForDirection(direction)
+  const categories = getCategoriesForDirection(direction).filter(
+    (name) => direction === 'income' || name !== PAYROLL_CATEGORY
+  )
 
   useEffect(() => {
     if (!payment) {
