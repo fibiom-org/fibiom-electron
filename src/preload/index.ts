@@ -101,6 +101,14 @@ if (process.contextIsolated) {
         ipcRenderer.invoke('settings:set', key, value)
     })
 
+    contextBridge.exposeInMainWorld('exportAPI', {
+      saveCsv: (
+        defaultName: string,
+        contents: string
+      ): Promise<{ saved: boolean; filePath?: string }> =>
+        ipcRenderer.invoke('export:saveCsv', defaultName, contents)
+    })
+
     contextBridge.exposeInMainWorld('modelsAPI', {
       list: () => ipcRenderer.invoke('models:list'),
       select: (id: string) => ipcRenderer.invoke('models:select', id),

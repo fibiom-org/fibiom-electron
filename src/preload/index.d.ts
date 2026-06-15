@@ -119,6 +119,10 @@ interface ModelsAPI {
   onProgress: (cb: (percentage: number | null) => void) => () => void
 }
 
+interface ExportAPI {
+  saveCsv: (defaultName: string, contents: string) => Promise<{ saved: boolean; filePath?: string }>
+}
+
 declare global {
   interface Window {
     electron: ElectronAPI
@@ -131,6 +135,7 @@ declare global {
     chatAPI: ChatAPI
     settingsAPI: SettingsAPI
     modelsAPI: ModelsAPI
+    exportAPI: ExportAPI
   }
 }
 

@@ -1,13 +1,15 @@
 import { useMonthTransactions } from '@renderer/entities/transaction'
+import type { TransactionSelection } from '@renderer/features/export-transactions'
 import { ChartCard } from '@renderer/shared/ui/ChartCard'
 import { TransactionRow } from './TransactionRow'
 
 interface TransactionListWidgetProps {
   month: number
   year: number
+  selection?: TransactionSelection
 }
 
-export const TransactionListWidget = ({ month, year }: TransactionListWidgetProps) => {
+export const TransactionListWidget = ({ month, year, selection }: TransactionListWidgetProps) => {
   const { transactions, loading } = useMonthTransactions(month, year)
 
   return (
@@ -24,7 +26,7 @@ export const TransactionListWidget = ({ month, year }: TransactionListWidgetProp
       ) : (
         <ul className="divide-y divide-zinc-800/80">
           {transactions.map((tx) => (
-            <TransactionRow key={tx.id} transaction={tx} />
+            <TransactionRow key={tx.id} transaction={tx} selection={selection} />
           ))}
         </ul>
       )}

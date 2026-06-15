@@ -8,6 +8,7 @@ import { registerChatHandlers } from './chat-handlers'
 import { registerLlmHandlers } from './llm'
 import { registerModelHandlers } from './model-handlers'
 import { registerSettingsHandlers } from './settings-handlers'
+import { registerExportHandlers } from './export-handlers'
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -54,6 +55,7 @@ app.whenReady().then(() => {
   registerLlmHandlers()
   registerModelHandlers()
   registerSettingsHandlers()
+  registerExportHandlers()
 
   createWindow()
 
