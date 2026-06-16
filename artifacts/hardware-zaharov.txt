@@ -1,0 +1,14 @@
+# Hardware proof — generated 2026-06-16T07:21:26Z
+uname: Linux andrei-ThinkBook-15-G2-ITL 6.17.0-29-generic #29~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Mon May 11 10:30:58 UTC 2 x86_64 x86_64 x86_64 GNU/Linux
+
+## CPU
+11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz
+cores: 8
+## Memory
+MemTotal:       40852852 kB
+## GPU
+00:02.0 VGA compatible controller: Intel Corporation TigerLake-LP GT2 [Iris Xe Graphics] (rev 01)
+    
+## Disk
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme0n1p2  468G   83G  361G  19% /
