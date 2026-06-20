@@ -1,5 +1,5 @@
 # Hardware proof — generated 2026-06-15T12:48:51Z
-uname: Darwin Oleksandrs-MacBook-Pro.local 25.5.0 Darwin Kernel Version 25.5.0: Mon Apr 27 20:39:29 PDT 2026; root:xnu-12377.121.6~2/RELEASE_ARM64_T8142 arm64
+uname: Darwin <redacted-host> 25.5.0 Darwin Kernel Version 25.5.0: Mon Apr 27 20:39:29 PDT 2026; root:xnu-12377.121.6~2/RELEASE_ARM64_T8142 arm64
 
 ## CPU
 Apple M5

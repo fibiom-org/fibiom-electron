@@ -1,6 +1,6 @@
 # Hardware proof — generated 2026-06-15T17:06:26Z
 
-uname: Darwin PC-FVFGQ066Q05R 23.4.0 Darwin Kernel Version 23.4.0: Fri Mar 15 00:12:41 PDT 2024; root:xnu-10063.101.17~1/RELEASE_ARM64_T8103 arm64
+uname: Darwin <redacted-host> 23.4.0 Darwin Kernel Version 23.4.0: Fri Mar 15 00:12:41 PDT 2024; root:xnu-10063.101.17~1/RELEASE_ARM64_T8103 arm64
 
 ## CPU
 

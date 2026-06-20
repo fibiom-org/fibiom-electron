@@ -5,6 +5,8 @@ out
 .DS_Store
 .eslintcache
 *.log*
+# but keep run logs committed under artifacts/ (scrub local paths/hostnames first)
+!artifacts/*.log
 
 # Local SQLite database (keep the db/ folder, ignore the data files)
 db/*.sqlite
