@@ -1,9 +1,8 @@
 import * as secureStore from './secure-store'
-import { embedTexts } from './embeddings'
+import { indexDocumentChunks, deleteDocumentChunks } from './rag'
 
 const CHUNK_SIZE = 1000
 const CHUNK_OVERLAP = 150
-const EMBED_BATCH = 16
 
 export interface DocumentRow {
   id: number
@@ -19,8 +18,6 @@ const resolveProjectId = (projectId?: number): number | null => {
   const row = secureStore.query<{ id: number }>('SELECT id FROM projects ORDER BY id LIMIT 1')[0]
   return row?.id ?? null
 }
-
-const sourceTypeFor = (documentId: number): string => `doc:${documentId}`
 
 const chunkText = (text: string): string[] => {
   const words = text.split(/\s+/).filter(Boolean)
@@ -77,34 +74,23 @@ export const addDocument = async (
      FROM documents WHERE rowid = last_insert_rowid()`
   )[0]
 
-  const sourceType = sourceTypeFor(doc.id)
   console.log(`[documents] embedding ${chunks.length} chunk(s) of "${filename}" (doc ${doc.id})`)
-
-  for (let start = 0; start < chunks.length; start += EMBED_BATCH) {
-    const batch = chunks.slice(start, start + EMBED_BATCH)
-    const vectors = await embedTexts(batch)
-    for (let i = 0; i < batch.length; i++) {
-      secureStore.exec(
-        `INSERT INTO rag_chunks (project_id, source_type, source_id, content, embedding)
-         VALUES (?, ?, ?, ?, ?)
-         ON CONFLICT(project_id, source_type, source_id)
-         DO UPDATE SET content = excluded.content,
-                       embedding = excluded.embedding,
-                       updated_at = datetime('now')`,
-        [pid, sourceType, start + i, `[${filename}] ${batch[i]}`, JSON.stringify(vectors[i])]
-      )
-    }
-  }
+  await indexDocumentChunks(
+    pid,
+    doc.id,
+    chunks.map((chunk) => `[${filename}] ${chunk}`)
+  )
 
   return doc
 }
 
-export const deleteDocument = (documentId: number, projectId?: number): void => {
+export const deleteDocument = async (documentId: number, projectId?: number): Promise<void> => {
   const pid = resolveProjectId(projectId)
   if (pid === null) return
-  secureStore.exec('DELETE FROM rag_chunks WHERE project_id = ? AND source_type = ?', [
-    pid,
-    sourceTypeFor(documentId)
-  ])
+  const row = secureStore.query<{ chunk_count: number }>(
+    'SELECT chunk_count FROM documents WHERE id = ? AND project_id = ?',
+    [documentId, pid]
+  )[0]
+  if (row) await deleteDocumentChunks(pid, documentId, row.chunk_count)
   secureStore.exec('DELETE FROM documents WHERE id = ? AND project_id = ?', [documentId, pid])
 }
