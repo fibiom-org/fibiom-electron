@@ -40,7 +40,7 @@ export const TransactionsPage = () => {
           exporter={exporter}
         />
       )}
-      <TransactionListWidget month={period.month} year={period.year} selection={selection} />
+      <TransactionListWidget selection={selection} />
       <ExportToast feedback={exporter.feedback} onDismiss={exporter.dismissFeedback} />
     </div>
   )

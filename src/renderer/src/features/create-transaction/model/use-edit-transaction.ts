@@ -16,6 +16,7 @@ export const useEditTransaction = (transaction: TransactionListItem, onSaved?: (
       type: transaction.type,
       amount: String(transaction.amount),
       category: transaction.category?.value ?? '',
+      project: transaction.projectId,
       date: transaction.date,
       description: transaction.description ?? ''
     }

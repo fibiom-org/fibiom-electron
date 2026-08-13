@@ -183,7 +183,7 @@ interface ProjectEntity {
   id: string
   name: string
   type: 'personal' | 'business'
-  currency: 'USD' | 'EUR' | 'GBP'
+  currency: 'USD' | 'EUR' | 'GBP' | 'PLN'
   initialCash: number
   description: string | null
   createdAt: string
@@ -250,7 +250,7 @@ interface ProjectsAPI {
   hydrate: () => Promise<ProjectsHydrateResult>
   create: (input: {
     name: string
-    currency: 'USD' | 'EUR' | 'GBP'
+    currency: 'USD' | 'EUR' | 'GBP' | 'PLN'
     initialCash?: number
     description?: string
     type?: 'personal' | 'business'

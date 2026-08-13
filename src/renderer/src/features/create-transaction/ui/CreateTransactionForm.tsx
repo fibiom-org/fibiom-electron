@@ -21,7 +21,8 @@ export const CreateTransactionForm = ({ onCreated }: CreateTransactionFormProps)
     form.reset({
       type: 'expense',
       amount: prefill?.amount ?? '',
-      category: '',
+      category: prefill?.category ?? '',
+      project: '',
       date: prefill?.date ?? '',
       description: prefill?.description ?? ''
     })

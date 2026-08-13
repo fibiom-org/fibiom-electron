@@ -1,9 +1,9 @@
-export type DemoProjectKey = 'acme' | 'streampay'
+export type DemoProjectKey = 'acme' | 'streampay' | 'personal'
 
 export interface DemoProjectSeed {
   key: DemoProjectKey
   name: string
-  currency: 'USD' | 'EUR' | 'GBP'
+  currency: 'USD' | 'EUR' | 'GBP' | 'PLN'
   initialCash: number
   description: string
   type: 'personal' | 'business'
@@ -58,6 +58,14 @@ export const DEMO_PROJECTS: DemoProjectSeed[] = [
     initialCash: 85_000,
     description: 'Subscription business with mixed revenue',
     type: 'business'
+  },
+  {
+    key: 'personal',
+    name: 'Personal',
+    currency: 'USD',
+    initialCash: 6_200,
+    description: 'Everyday personal finances',
+    type: 'personal'
   }
 ]
 
@@ -152,6 +160,58 @@ export const DEMO_PAYMENTS: DemoPaymentSeed[] = [
     billingDay: null,
     note: null,
     createdAt: '2026-03-01T00:00:00.000Z'
+  },
+  {
+    id: 'pay-salary-personal',
+    projectKey: 'personal',
+    direction: 'income',
+    vendor: 'Employer',
+    amount: 5500,
+    type: 'recurring',
+    category: 'Salary',
+    date: null,
+    billingDay: 1,
+    note: null,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'pay-rent-personal',
+    projectKey: 'personal',
+    direction: 'expense',
+    vendor: 'Landlord',
+    amount: 1800,
+    type: 'recurring',
+    category: 'Housing',
+    date: null,
+    billingDay: 1,
+    note: null,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'pay-groceries-personal',
+    projectKey: 'personal',
+    direction: 'expense',
+    vendor: 'Whole Foods',
+    amount: 420,
+    type: 'recurring',
+    category: 'Groceries',
+    date: null,
+    billingDay: 5,
+    note: null,
+    createdAt: '2026-01-01T00:00:00.000Z'
+  },
+  {
+    id: 'pay-utilities-personal',
+    projectKey: 'personal',
+    direction: 'expense',
+    vendor: 'City Power & Water',
+    amount: 160,
+    type: 'recurring',
+    category: 'Utilities',
+    date: null,
+    billingDay: 10,
+    note: null,
+    createdAt: '2026-01-01T00:00:00.000Z'
   }
 ]
 

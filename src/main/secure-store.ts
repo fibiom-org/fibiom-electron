@@ -6,6 +6,7 @@ import * as argon2 from 'argon2'
 import { app } from 'electron'
 import { runMigrations } from './schema'
 import { devDbBaseDir, devDbFilePath, devDbMetaFilePath } from './db-path'
+import { seedDemoDataWithConnection } from './seed-demo'
 
 /**
  * Master-key secured SQLite store.
@@ -111,6 +112,7 @@ export async function setup(masterKey: string): Promise<void> {
   const conn = keyedConnection(hexKey)
   runMigrations(conn)
   await ensureUser(conn, masterKey)
+  seedDemoDataWithConnection(conn)
 
   const meta: Meta = {
     salt: salt.toString('hex'),
@@ -138,6 +140,7 @@ export async function unlock(masterKey: string): Promise<boolean> {
   }
   runMigrations(conn)
   await ensureUser(conn, masterKey)
+  seedDemoDataWithConnection(conn)
   db = conn
   return true
 }

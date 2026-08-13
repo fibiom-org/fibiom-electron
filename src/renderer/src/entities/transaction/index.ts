@@ -21,5 +21,6 @@ export {
 export { CategoryPill } from './ui/CategoryPill'
 export { notifyTransactionsChanged } from './model/transactions-store'
 export { useMonthTransactions } from './model/use-month-transactions'
+export { useAllTransactions } from './model/use-all-transactions'
 export { getMonthTransactions } from './api/get-month-transactions'
 export { getAllTransactions } from './api/get-all-transactions'

@@ -6,6 +6,7 @@ export const transactionSchema = z.object({
   amount: z.coerce.number().positive('Amount must be greater than 0'),
   type: z.enum(transactionTypes),
   category: z.string().min(1, 'Select a category'),
+  project: z.string().min(1, 'Select a project'),
   date: z.string().min(1, 'Pick a date'),
   description: z.string().max(200, 'Must be 200 characters or fewer').optional()
 })

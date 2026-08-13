@@ -1,37 +1,44 @@
-import type { ReactNode } from 'react'
-import { NavLink, useMatches } from 'react-router-dom'
-import { useAuth } from '@renderer/features/auth/AuthContext'
-import { useProjectStoreHydration } from '@renderer/entities/project'
-import { Button } from '@renderer/components/ui/Button'
-import { cn } from '@renderer/lib/cn'
-import { ArrowLeftRight, Database, FolderKanban, Settings, Wallet } from 'lucide-react'
-import logoImg from '../../../../../resources/icon.png'
+import type { ReactNode } from "react";
+import { NavLink, useMatches } from "react-router-dom";
+import { useAuth } from "@renderer/features/auth/AuthContext";
+import { useProjectStoreHydration } from "@renderer/entities/project";
+import { Button } from "@renderer/components/ui/Button";
+import { cn } from "@renderer/lib/cn";
+import {
+  ArrowLeftRight,
+  Database,
+  FolderKanban,
+  Settings,
+  Wallet,
+} from "lucide-react";
+import logoImg from "../../../../../resources/icon.png";
 
 const nav = [
-  { label: 'Projects', icon: <FolderKanban />, path: '/projects' },
-  { label: 'Transactions', icon: <ArrowLeftRight />, path: '/transactions' },
-  { label: 'Models', icon: <Database />, path: '/chats' },
-  { label: 'Wallet', icon: <Wallet />, path: '/wallet' },
-  { label: 'Settings', icon: <Settings />, path: '/settings' }
-]
+  { label: "Dashboard", icon: <FolderKanban />, path: "/" },
+  { label: "Projects", icon: <FolderKanban />, path: "/projects" },
+  { label: "Transactions", icon: <ArrowLeftRight />, path: "/transactions" },
+  { label: "Models", icon: <Database />, path: "/chats" },
+  { label: "Wallet", icon: <Wallet />, path: "/wallet" },
+  { label: "Settings", icon: <Settings />, path: "/settings" },
+];
 
 interface RouteHandle {
-  title?: string
+  title?: string;
 }
 
 interface AppShellProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export const AppShell = ({ children }: AppShellProps) => {
-  const { lock } = useAuth()
-  const projectsReady = useProjectStoreHydration()
-  const matches = useMatches()
+  const { lock } = useAuth();
+  const projectsReady = useProjectStoreHydration();
+  const matches = useMatches();
   const title =
     [...matches]
       .reverse()
       .map((match) => (match.handle as RouteHandle | undefined)?.title)
-      .find(Boolean) ?? 'Fibiom'
+      .find(Boolean) ?? "Fibiom";
 
   return (
     <div className="flex h-screen bg-zinc-950 text-zinc-100">
@@ -46,13 +53,13 @@ export const AppShell = ({ children }: AppShellProps) => {
               <NavLink
                 key={item.label}
                 to={item.path}
-                end={item.path === '/' || item.path === '/projects'}
+                end={item.path === "/" || item.path === "/projects"}
                 className={({ isActive }) =>
                   cn(
-                    'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors',
+                    "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors",
                     isActive
-                      ? 'bg-zinc-800 text-white'
-                      : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200'
+                      ? "bg-zinc-800 text-white"
+                      : "text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200",
                   )
                 }
               >
@@ -69,14 +76,16 @@ export const AppShell = ({ children }: AppShellProps) => {
                 <span className="text-zinc-500">{item.icon}</span>
                 {item.label}
               </button>
-            )
+            ),
           )}
         </nav>
         <div className="mt-auto rounded-xl border border-zinc-800 p-3">
           <p className="flex items-center gap-2 text-sm font-medium">
             <span className="text-emerald-400">🔓</span> Vault unlocked
           </p>
-          <p className="truncate text-xs text-zinc-500">Encrypted local store</p>
+          <p className="truncate text-xs text-zinc-500">
+            Encrypted local store
+          </p>
           <Button variant="ghost" className="mt-2 w-full" onClick={lock}>
             Lock
           </Button>
@@ -92,9 +101,13 @@ export const AppShell = ({ children }: AppShellProps) => {
           </span>
         </header>
         <main className="flex-1 overflow-y-auto p-8">
-          {!projectsReady ? <p className="text-sm text-zinc-500">Loading workspace…</p> : children}
+          {!projectsReady ? (
+            <p className="text-sm text-zinc-500">Loading workspace…</p>
+          ) : (
+            children
+          )}
         </main>
       </div>
     </div>
-  )
-}
+  );
+};

@@ -3,6 +3,7 @@ import type { TransactionListItem, TransactionType } from '../model/types'
 
 export interface TransactionRow {
   id: number
+  projectId: number
   amount: number
   type: TransactionType
   date: string
@@ -11,7 +12,7 @@ export interface TransactionRow {
 }
 
 const LIST_SQL = `
-  SELECT t.id, t.amount, t.type, t.date, t.description, c.name AS categoryName
+  SELECT t.id, t.project_id AS projectId, t.amount, t.type, t.date, t.description, c.name AS categoryName
   FROM transactions t
   LEFT JOIN categories c ON c.id = t.category_id
   WHERE t.date >= ? AND t.date < ?
@@ -21,6 +22,7 @@ const LIST_SQL = `
 export function mapTransactionRow(row: TransactionRow): TransactionListItem {
   return {
     id: row.id,
+    projectId: String(row.projectId),
     amount: row.amount,
     type: row.type,
     date: row.date,

@@ -10,6 +10,7 @@ export interface Transaction extends TransactionDraft {
 
 export interface TransactionListItem {
   id: number
+  projectId: string
   amount: number
   type: TransactionType
   category: CategoryOption | null
