@@ -3,6 +3,7 @@ import { useCreateTransactionModal } from '@renderer/features/create-transaction
 import type { TransactionSelection } from '@renderer/features/export-transactions'
 import { cn } from '@renderer/lib/cn'
 import { formatCurrency, formatDate } from '@renderer/shared/lib/format'
+import { useProject } from '@renderer/entities/project'
 
 interface TransactionRowProps {
   transaction: TransactionListItem
@@ -11,7 +12,8 @@ interface TransactionRowProps {
 
 export const TransactionRow = ({ transaction, selection }: TransactionRowProps) => {
   const { openEdit } = useCreateTransactionModal()
-  const { category, description, date, type, amount } = transaction
+  const { category, description, date, type, amount, projectId } = transaction
+  const project = useProject(projectId)
 
   const selectionMode = selection?.selectionMode ?? false
   const selected = selection?.isSelected(transaction.id) ?? false
@@ -44,6 +46,9 @@ export const TransactionRow = ({ transaction, selection }: TransactionRowProps) 
           </p>
           <p className="text-xs text-zinc-500">{formatDate(date)}</p>
         </div>
+        <span className="shrink-0 rounded-full border border-zinc-700 px-2.5 py-1 text-xs text-zinc-400">
+          {project?.name ?? 'Unknown project'}
+        </span>
         <span
           className={cn(
             'text-sm font-medium tabular-nums',

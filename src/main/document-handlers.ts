@@ -8,7 +8,7 @@ export const registerDocumentHandlers = (): void => {
     addDocument(filename, text, projectId)
   )
 
-  ipcMain.handle('documents:delete', (_event, documentId: number, projectId?: number) => {
+  ipcMain.handle('documents:delete', (_event, documentId: number, projectId?: number) =>
     deleteDocument(documentId, projectId)
-  })
+  )
 }

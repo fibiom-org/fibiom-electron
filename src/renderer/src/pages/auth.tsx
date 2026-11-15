@@ -32,10 +32,10 @@ export const AuthPage = () => {
     try {
       if (creating) {
         await setup(masterKey);
-        navigate("/projects", { replace: true });
+        navigate("/", { replace: true });
       } else {
         const ok = await unlock(masterKey);
-        if (ok) navigate("/projects", { replace: true });
+        if (ok) navigate("/", { replace: true });
         else setError("Incorrect master key");
       }
     } catch (err) {

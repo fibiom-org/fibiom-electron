@@ -1,7 +1,7 @@
 export type FinanceMode = 'personal' | 'business'
 export type PaymentDirection = 'expense' | 'income'
 export type PaymentType = 'recurring' | 'one-time'
-export type ProjectCurrency = 'USD' | 'EUR' | 'GBP'
+export type ProjectCurrency = 'USD' | 'EUR' | 'GBP' | 'PLN'
 export type ProjectType = 'personal' | 'business'
 
 export interface DashboardPeriod {

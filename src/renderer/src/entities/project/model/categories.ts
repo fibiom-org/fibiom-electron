@@ -15,7 +15,8 @@ export const INCOME_CATEGORIES = ['Subscriptions', 'Services', 'Investment', 'Ot
 export const CURRENCY_OPTIONS = [
   { value: 'USD', label: 'USD' },
   { value: 'EUR', label: 'EUR' },
-  { value: 'GBP', label: 'GBP' }
+  { value: 'GBP', label: 'GBP' },
+  { value: 'PLN', label: 'PLN' }
 ] as const
 
 export const getCategoriesForDirection = (direction: 'expense' | 'income'): readonly string[] =>

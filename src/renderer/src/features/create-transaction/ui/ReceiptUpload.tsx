@@ -1,10 +1,28 @@
 import { useEffect, useRef, useState } from 'react'
 import { Button } from '@renderer/components/ui/Button'
+import { loadCategories } from '@renderer/features/settings'
+import type { CategoryOption } from '@renderer/entities/transaction'
 
 export interface ReceiptPrefill {
   amount?: string
   date?: string
   description?: string
+  category?: string
+}
+
+const buildPrompt = (categories: CategoryOption[]): string => {
+  const values = categories.map((c) => c.value)
+  return `Extract the data from this receipt/invoice and return STRICTLY valid JSON
+with no explanation and no markdown, matching this schema:
+{
+  "merchant": string | null,
+  "date": string | null,        // ISO 8601 if recognizable
+  "currency": string | null,
+  "total": number | null,
+  "category": string | null,    // one of: ${values.join(', ')} — pick the best match for what was purchased (e.g. a restaurant/cafe/grocery receipt is "food"), null if none fit
+  "items": [{ "name": string, "qty": number | null, "price": number | null }]
+}
+If a field is not recognizable, use null. Numbers must not include a currency symbol.`
 }
 
 type Status = 'idle' | 'busy' | 'error'
@@ -59,8 +77,13 @@ const ReceiptUpload = ({
     try {
       const buffer = await file.arrayBuffer()
       const ext = file.name.split('.').pop()?.toLowerCase() || 'png'
-      const { text } = await window.visionAPI.parse(new Uint8Array(buffer), ext)
-      onContinue(mapReceipt(text))
+      const categories = await loadCategories()
+      const { text } = await window.visionAPI.parse(
+        new Uint8Array(buffer),
+        ext,
+        buildPrompt(categories)
+      )
+      onContinue(mapReceipt(text, categories))
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not read the photo')
       setStatus('error')
@@ -129,7 +152,7 @@ const ReceiptUpload = ({
   )
 }
 
-const mapReceipt = (text: string): ReceiptPrefill => {
+const mapReceipt = (text: string, categories: CategoryOption[]): ReceiptPrefill => {
   const json = extractJson(text)
   if (!json) return {}
 
@@ -143,6 +166,13 @@ const mapReceipt = (text: string): ReceiptPrefill => {
   if (typeof json.merchant === 'string' && json.merchant.trim()) {
     prefill.description = json.merchant.trim()
   }
+
+  if (typeof json.category === 'string') {
+    const value = json.category.trim().toLowerCase()
+    const match = categories.find((c) => c.value === value)
+    if (match) prefill.category = match.value
+  }
+
   return prefill
 }
 

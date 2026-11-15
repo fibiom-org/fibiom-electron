@@ -11,7 +11,7 @@ import { saveTransaction } from '@renderer/features/create-transaction/api/save-
 export function useCreateTransaction(onCreated?: (draft: TransactionDraft) => void) {
   const form = useForm<TransactionInput, unknown, TransactionDraft>({
     resolver: zodResolver(transactionSchema),
-    defaultValues: { type: 'expense', category: '', date: '', description: '' }
+    defaultValues: { type: 'expense', category: '', project: '', date: '', description: '' }
   })
 
   const submit = form.handleSubmit(async (draft) => {

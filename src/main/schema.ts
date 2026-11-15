@@ -192,9 +192,10 @@ const V3 = `
 `
 
 const V4 = `
-  -- QVAC RAG store: one row per embedded source record (transaction, receipt,
-  -- goal …). 'embedding' is a JSON float array produced on-device by the QVAC
-  -- embeddings model; semantic retrieval is a cosine scan over these vectors.
+  -- Legacy RAG store. Vectors now live in the on-device QVAC vector DB (HyperDB),
+  -- one workspace per project, written/queried via @qvac/sdk in src/main/rag.ts.
+  -- This table is retained only so the migration history stays intact; it is no
+  -- longer read or written.
   CREATE TABLE IF NOT EXISTS rag_chunks (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id  INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
@@ -210,8 +211,9 @@ const V4 = `
 
 const V5 = `
   -- Uploaded reference documents (e.g. PDFs). The extracted text is split into
-  -- chunks and embedded into rag_chunks with source_type = 'doc:<id>', so the
-  -- existing semantic retrieval and the chat surface them automatically.
+  -- chunks and embedded into the QVAC vector DB (workspace project-<id>, doc ids
+  -- 'doc-<docId>-<n>'), so the existing semantic retrieval and the chat surface
+  -- them automatically.
   CREATE TABLE IF NOT EXISTS documents (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     project_id  INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
